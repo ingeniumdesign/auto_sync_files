@@ -1,9 +1,9 @@
 <?php
 
 
-$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['ID\Downloadscriptstask\Task\Task'] = array(
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['ID\AutoSyncFiles\Task\Task'] = array(
     'extension' => $_EXTKEY,
-    'title' => 'Download of a Script-File',
-    'description' => 'This task is doing something really important',
-    'additionalFields' => 'ID\Downloadscriptstask\Task\Fields'
+    'title' => 'Sync a file from another Webpage',
+    'description' => 'Download a file from another Webpage periodically to your own Webspace, e.g. the Google-Analytics-Script',
+    'additionalFields' => 'ID\AutoSyncFiles\Task\Fields'
 );

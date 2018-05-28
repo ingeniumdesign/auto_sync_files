@@ -1,8 +1,8 @@
 <?php
 
 $EM_CONF[$_EXTKEY] = array(
-    'title' => 'Download Scripts Cronjob',
-    'description' => 'This Extension Downloads external JavaScript-Librarys regularly so you can include them from the server and it can be cached.',
+    'title' => 'Auto Sync Files',
+    'description' => 'This Extension downloads externals files periodically via Scheduler to your Webspace thus you do always have the newest version of a file locally stored. This can be really useful to improve caching performance.',
     'category' => 'plugin',
     'author' => 'Sebastian Schmal',
     'author_email' => 'info@ingeniumdesign.de',
@@ -21,7 +21,7 @@ $EM_CONF[$_EXTKEY] = array(
     ),
     'autoload' => [
         'psr-4' => [
-            'ID\\Downloadscriptstask\\' => 'Classes'
+            'ID\\AutoSyncFiles\\' => 'Classes'
         ],
     ],
 );
