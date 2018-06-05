@@ -1,7 +1,8 @@
 # auto_sync_files
+
 TYPO3 8.7 Auto-Sync-Files Extension
 
-This Extension downloads externals files periodically via Scheduler to your Webspace. Thus you do always have the newest version of a file locally stored. This can be really useful to improve performance because external files can be cached this way.
+This Extension Auto-Sync-Files downloads externals files periodically via Scheduler to your Webspace. Thus you do always have the newest version of a file locally stored. This can be really useful to improve performance because external files can be cached this way.
 It also allows you to clear the cache everytime there is a new version of the file.
 
 
@@ -18,7 +19,8 @@ It also allows you to clear the cache everytime there is a new version of the fi
 
 * If you want the frontend-cache to be cleared everytime there is a different version than the stored one, tik the checkbox "Clear Frontend-Cache after execution" (NOTICE: The cache is only cleared if there is a difference between the two files). 
 
-* Include the locally-synced-file in your Typoscript
+* Include the locally-synced-file in your Typoscript with includeJS...
+  * Example: includeJSFooter.googleAnalytics = fileadmin/ DOWNLOAD FILE PATH HERE
 
 * Replace the default Google-Analytics-Code to one that does not load the external Library (you can place this bit in a Javascript-File of your choice). We just removed the part where it loads the external library from the original code by Google:
 ```javascript
@@ -27,6 +29,47 @@ It also allows you to clear the cache everytime there is a new version of the fi
      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();
      // This line is removed
  })(window,document,'script','','ga');
+ ga('set', 'anonymizeIp', true);
  ga('create', 'UA-XXXXXX-1', 'auto'); // Your tracking-ID 
  ga('send', 'pageview');
  ```
+ 
+You can use the Auto-Sync-Files Extension for the Google PageSpeed Tools Insights!
+
+Browser-Caching Time Error:
+https://www.google-analytics.com/analytics.js (2 Hour)
+
+# Contact &amp; Communication
+
+## GIT
+
+We are on github:<br />
+https://github.com/ingeniumdesign/auto_sync_files/
+
+
+## Agency
+
+INGENIUMDESIGN<br />
+TYPO3 - Internetagentur<br />
+In der Eisenbach 22<br />
+65510 Idstein<br />
+<br />
+http://www.ingeniumdesign.de/<br />
+info@ingeniumdesign.de
+
+## Donate
+
+Patreon: https://www.patreon.com/typo3probleme/<br />
+BTC: 1Emte6AxnifWqt7N8vSqSF7JK1K6CYuBj4<br />
+LTC: Lfs2F8DabYuunxYw2ym9CRLAMBKZUaaBNh<br />
+ETH: 0x95298b41564f070bc83bc76159bb7804d26483d6<br />
+PayPay: www.paypal.me/INGENIUMDESIGN/
+
+## Used by
+
+We are searching for LIVE-References or Live-Examples for the TYPO3 Auto-Sync-Files Extension.<br />
+Please be so kind to send us an E-Mail if you're using it. Thanks!
+
+**Links/References:**
+
+https://www.easy-sprachreisen.de/ - by INGENIUMDESIGN<br />
