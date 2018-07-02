@@ -38,7 +38,7 @@ class Fields implements \TYPO3\CMS\Scheduler\AdditionalFieldProviderInterface {
         $fieldHtml = '<input type="text" style="width: 50%" name="' . $fieldName . '" id="' . $fieldId . '" value="' . htmlspecialchars($fieldValue) . '" />';
         $additionalFields[$fieldId] = array(
             'code' => $fieldHtml,
-            'label' => 'The absolute path the file should be saved to',
+            'label' => 'The absolute path the file should be saved to (Typo3-base-dir: "' . PATH_site . '")',
             'cshKey' => '_MOD_tools_txschedulerM1Y',
             'cshLabel' => $fieldId
         );
