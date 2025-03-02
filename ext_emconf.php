@@ -1,18 +1,19 @@
 <?php
 
+$_EXTKEY = 'auto_sync_files';
+
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Auto Sync Files',
-    'description' => 'Downloads externals files periodically via Scheduler to your Webspace thus you do always have the newest version of a file locally stored. This can be really useful to improve caching performance.',
+    'description' => 'Downloads externals files periodically via Scheduler to your Webspace thus you do always have the newest version of a file locally stored. This can be really useful to improve caching performance. Or download a compressed file, unzip the file, delete the existing files.',
     'category' => 'plugin',
-    'constraints' => array(
+    'constraints' => [
         'depends' => [
-            'typo3' => '8.7.0-8.7.99',
+            'typo3'    => '12.4.0-12.4.99',
+            'scheduler' => '12.4.0-12.4.99'
         ],
-        'conflicts' => array(
-        ),
-        'suggests' => array(
-        ),
-    ),
+        'conflicts' => [],
+        'suggests'  => [],
+    ],
     'autoload' => [
         'psr-4' => [
             'ID\\AutoSyncFiles\\' => 'Classes'
@@ -25,5 +26,5 @@ $EM_CONF[$_EXTKEY] = [
 	'author' => 'Sebastian Schmal',
 	'author_email' => 'info@ingeniumdesign.de',
 	'author_company' => 'INGENIUMDESIGN',
-	'version' => '1.0.0',
+	'version' => '12.0.3',
 ];
