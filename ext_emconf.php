@@ -1,6 +1,11 @@
 <?php
 
-$_EXTKEY = 'auto_sync_files';
+/*
+ * This file is part of the package ID\AutoSyncFiles.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
 
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Auto Sync Files',
