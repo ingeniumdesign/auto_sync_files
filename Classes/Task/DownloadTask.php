@@ -2,33 +2,43 @@
 
 namespace ID\AutoSyncFiles\Task;
 
-class Task extends \TYPO3\CMS\Scheduler\Task\AbstractTask
+use TYPO3\CMS\Scheduler\Task\AbstractTask;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Cache\CacheManager;
+
+class DownloadTask extends AbstractTask
 {
-    public function execute()
+    public $auto_sync_files_file_url = '';
+    public $auto_sync_files_local_path = '';
+    public $auto_sync_files_clear_cache = '';
+
+    public function execute(): bool
     {
-        // Download File
-        $newFile = file_get_contents($this->auto_sync_files_file_url);
+        if ($this->auto_sync_files_local_path === '' || $this->auto_sync_files_file_url === '') {
+            return false;
+        }
+
+        $newFile = @file_get_contents($this->auto_sync_files_file_url);
+        if ($newFile === false) {
+            return false;
+        }
 
         if (!file_exists($this->auto_sync_files_local_path)) {
-            file_put_contents($this->auto_sync_files_local_path, '');
+            @file_put_contents($this->auto_sync_files_local_path, '');
         }
 
-        $oldFile = file_get_contents($this->auto_sync_files_local_path);
-
-        if ($newFile === $oldFile) {
-            return true; // Nothing todo here. Both files are still identical
+        $oldFile = @file_get_contents($this->auto_sync_files_local_path);
+        if ($oldFile === $newFile) {
+            return true;
         }
 
-        // Save new file
-        $succ = file_put_contents($this->auto_sync_files_local_path, $newFile);
+        $succ = @file_put_contents($this->auto_sync_files_local_path, $newFile);
 
-        // Clear Cache
-        if ($this->auto_sync_files_clear_cache == 'on') {
-            $objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Extbase\Object\ObjectManager');
-            $cacheService = $objectManager->get('TYPO3\\CMS\\Extbase\\Service\\CacheService');
-            $cacheService->clearPageCache();
+        if ($this->auto_sync_files_clear_cache === 'on') {
+            $cacheManager = GeneralUtility::makeInstance(CacheManager::class);
+            $cacheManager->flushCachesInGroup('pages');
         }
 
-        return $succ;
+        return (bool)$succ;
     }
 }
