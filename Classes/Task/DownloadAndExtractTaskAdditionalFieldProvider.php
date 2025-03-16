@@ -7,12 +7,16 @@ use TYPO3\CMS\Scheduler\AbstractAdditionalFieldProvider;
 use TYPO3\CMS\Scheduler\Controller\SchedulerModuleController;
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use TYPO3\CMS\Core\Core\Environment;
 
 class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFieldProvider
 {
     public function getAdditionalFields(array &$taskInfo, $task, SchedulerModuleController $schedulerModule): array
     {
         $additionalFields = [];
+
+        // Absolute Base Path für korrekten Pfad-Hinweis
+        $basePath = Environment::getPublicPath();
 
         // Download URL field
         $taskInfo['auto_sync_files_file_url'] = $task instanceof DownloadAndExtractTask
@@ -27,12 +31,14 @@ class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFi
         ];
 
         // Local Path field with warning that all files in this folder will be deleted
+        // Local Path field with absolute example placeholder
         $taskInfo['auto_sync_files_local_path'] = $task instanceof DownloadAndExtractTask
             ? $task->auto_sync_files_local_path
             : ($taskInfo['auto_sync_files_local_path'] ?? '');
         $additionalFields['auto_sync_files_local_path'] = [
             'code'  => sprintf(
-                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_local_path]" id="auto_sync_files_local_path" placeholder="e.g., /var/www/html/path/to/extracted/" value="%s" size="30" />',
+                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_local_path]" id="auto_sync_files_local_path" placeholder="%s/fileadmin/user_upload/extracted_files/" value="%s" size="30" />',
+                $basePath,
                 htmlspecialchars($taskInfo['auto_sync_files_local_path'])
             ),
             'label' => 'Local Path (all files in this folder will be deleted!)',
