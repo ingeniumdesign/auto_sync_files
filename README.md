@@ -2,7 +2,7 @@
 
 **TYPO3 12.4.x - Auto Sync Files Extension**
 
-This extension periodically downloads external files via the Scheduler to your local webspace so that you always have the newest version available. It is especially useful for caching external resources and improving performance. Additionally, the extension now offers an optional **Download & Extract** mode which downloads a compressed archive (ZIP/TAR) and extracts its contents, replacing existing files.
+This extension periodically downloads external files via the Scheduler to your local webspace so that you always have the newest version available. It is especially useful for caching external resources and improving performance. Additionally, the extension now offers an optional **Download & Extract** mode which downloads a compressed archive (ZIP, TAR, TAR.GZ) and extracts its contents, replacing existing files.
 
 ---
 
@@ -52,7 +52,7 @@ This extension periodically downloads external files via the Scheduler to your l
    In the TYPO3 backend, add a new task and select **"Auto Sync Files: Download & Extract"** as the task type.
 
 2. **Configure the Task:**
-  - **Download URL:** Set this to the URL of the compressed archive (ZIP or TAR) that contains the files.
+  - **Download URL:** Set this to the URL of the compressed archive (ZIP, TAR, or TAR.GZ) that contains the files.
   - **Local Path:** Specify the target folder where the archive should be extracted.  
     **Warning:** All files in the specified folder will be deleted before the new files are copied over.
   - **Clear Cache:** Enable the option if you want to clear the frontend cache after the update.
@@ -77,6 +77,10 @@ This extension periodically downloads external files via the Scheduler to your l
 
 - **Configuration:**  
   Both task types can be configured via the TYPO3 Scheduler. Ensure you provide valid and complete information in the input fields.
+
+- **Supported Archive Formats:**  
+  ZIP (.zip), TAR (.tar), and TAR.GZ (.tar.gz, .tgz) are supported.
+
 
 ---
 
@@ -107,3 +111,4 @@ We are searching for live references or live examples of the Auto Sync Files Ext
 
 **Links/References:**  
 [https://www.easy-sprachreisen.de/](https://www.easy-sprachreisen.de/) – by INGENIUMDESIGN
+[https://www.baukasten-typo3.de/](https://www.baukasten-typo3.de/) – by INGENIUMDESIGN

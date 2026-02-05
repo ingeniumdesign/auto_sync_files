@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace ID\AutoSyncFiles\Task;
@@ -6,7 +7,6 @@ namespace ID\AutoSyncFiles\Task;
 use TYPO3\CMS\Scheduler\AbstractAdditionalFieldProvider;
 use TYPO3\CMS\Scheduler\Controller\SchedulerModuleController;
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
-use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Core\Environment;
 
 class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFieldProvider

@@ -27,9 +27,8 @@ $EM_CONF[$_EXTKEY] = [
 	'state' => 'stable',
 	'uploadfolder' => 0,
 	'createDirs' => '',
-	'clearCacheOnLoad' => 1,
 	'author' => 'Sebastian Schmal',
 	'author_email' => 'info@ingeniumdesign.de',
 	'author_company' => 'INGENIUMDESIGN',
-	'version' => '12.0.4',
+	'version' => '12.0.5',
 ];

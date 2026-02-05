@@ -1,25 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ID\AutoSyncFiles\Task;
 
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\Environment;
 
 class DownloadAndExtractTask extends AbstractTask
 {
-    public $auto_sync_files_file_url = '';
-    public $auto_sync_files_local_path = '';
-    public $auto_sync_files_clear_cache = '';
-
-    private $logFile;
+    public string $auto_sync_files_file_url = '';
+    public string $auto_sync_files_local_path = '';
+    public string $auto_sync_files_clear_cache = '';
 
     public function execute(): bool
     {
-        $this->logFile = Environment::getPublicPath() . '/typo3temp/auto_sync_files.log';
-        $this->log("Start DownloadAndExtractTask");
-
         if ($this->auto_sync_files_local_path === '' || $this->auto_sync_files_file_url === '') {
             $this->log("FEHLER: Kein Zielpfad oder Download-URL angegeben.");
             return false;
@@ -33,7 +31,6 @@ class DownloadAndExtractTask extends AbstractTask
                 return false;
             }
             // Falls vorhanden, lösche den Inhalt
-            $this->log("Leere Zielverzeichnis: " . $this->auto_sync_files_local_path);
             $this->deleteFolderContents($this->auto_sync_files_local_path);
         } else {
             // Prüfe, ob das übergeordnete Verzeichnis existiert
@@ -48,53 +45,111 @@ class DownloadAndExtractTask extends AbstractTask
                 $this->log("FEHLER: Konnte das Zielverzeichnis nicht erstellen: " . $this->auto_sync_files_local_path);
                 return false;
             }
-            $this->log("Zielverzeichnis erstellt: " . $this->auto_sync_files_local_path);
         }
 
-        // Download der ZIP-Datei
-        $this->log("Lade Datei herunter: " . $this->auto_sync_files_file_url);
-        $archiveContent = @file_get_contents($this->auto_sync_files_file_url);
-        if ($archiveContent === false) {
-            $this->log("FEHLER: Konnte Datei nicht herunterladen.");
+        // Download der Archiv-Datei
+        try {
+            $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
+            $response = $requestFactory->request($this->auto_sync_files_file_url, 'GET');
+            if ($response->getStatusCode() !== 200) {
+                $this->log("FEHLER: HTTP Status " . $response->getStatusCode());
+                return false;
+            }
+            $archiveContent = $response->getBody()->getContents();
+        } catch (\Exception $e) {
+            $this->log("FEHLER: Konnte Datei nicht herunterladen. " . $e->getMessage());
             return false;
         }
 
         // Temporäre Datei & Entpack-Verzeichnis
-        $tempFile = Environment::getPublicPath() . '/typo3temp/auto_sync_files_archive.zip';
+        $fileExtension = $this->getArchiveExtension($this->auto_sync_files_file_url);
+        $tempFile = Environment::getPublicPath() . '/typo3temp/auto_sync_files_archive' . $fileExtension;
         $tempExtractDir = Environment::getPublicPath() . '/typo3temp/auto_sync_files_extract/';
 
         if (@file_put_contents($tempFile, $archiveContent) === false) {
-            $this->log("FEHLER: Konnte temporäre ZIP-Datei nicht speichern.");
+            $this->log("FEHLER: Konnte temporäre Archiv-Datei nicht speichern.");
             return false;
         }
         if (!is_dir($tempExtractDir)) {
             mkdir($tempExtractDir, 0755, true);
         }
 
-        // ZIP-Archiv entpacken
-        $this->log("Entpacke Archiv in: " . $tempExtractDir);
-        $unzipCommand = 'unzip -o ' . escapeshellarg($tempFile) . ' -d ' . escapeshellarg($tempExtractDir);
-        $this->executeCommand($unzipCommand, "FEHLER: Konnte ZIP nicht entpacken");
+        // Archiv entpacken
+        if (!$this->extractArchive($tempFile, $tempExtractDir)) {
+            return false;
+        }
 
         // Entpackte Dateien sicher verschieben
-        $this->log("Verschiebe entpackte Dateien nach: " . $this->auto_sync_files_local_path);
         $this->moveFolderContents($tempExtractDir, $this->auto_sync_files_local_path);
 
         // Cache leeren
         if ($this->auto_sync_files_clear_cache === 'on') {
-            $this->log("Leere TYPO3-Cache");
             $cacheManager = GeneralUtility::makeInstance(CacheManager::class);
             $cacheManager->flushCachesInGroup('pages');
         }
 
         // Temporäre Dateien entfernen
-        $this->log("Entferne temporäre Dateien.");
         $this->deleteFolderContents($tempExtractDir);
         @unlink($tempFile);
 
-        $this->log("DownloadAndExtractTask erfolgreich abgeschlossen.");
         return true;
     }
+
+    /**
+     * Ermittelt die Dateiendung aus der URL
+     */
+    private function getArchiveExtension(string $url): string
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+        $filename = basename($path);
+
+        if (str_ends_with($filename, '.tar.gz')) {
+            return '.tar.gz';
+        }
+        if (str_ends_with($filename, '.tgz')) {
+            return '.tgz';
+        }
+        if (str_ends_with($filename, '.tar')) {
+            return '.tar';
+        }
+        return '.zip';
+    }
+
+    /**
+     * Entpackt ein Archiv (ZIP, TAR, TAR.GZ) in das Zielverzeichnis
+     */
+    private function extractArchive(string $archiveFile, string $targetDir): bool
+    {
+        $extension = $this->getArchiveExtension($archiveFile);
+
+        // ZIP-Archiv
+        if ($extension === '.zip') {
+            $zip = new \ZipArchive();
+            if ($zip->open($archiveFile) !== true) {
+                $this->log("FEHLER: Konnte ZIP-Archiv nicht öffnen");
+                return false;
+            }
+            $zip->extractTo($targetDir);
+            $zip->close();
+            return true;
+        }
+
+        // TAR / TAR.GZ / TGZ-Archiv
+        if (in_array($extension, ['.tar', '.tar.gz', '.tgz'], true)) {
+            try {
+                $phar = new \PharData($archiveFile);
+                $phar->extractTo($targetDir, null, true);
+                return true;
+            } catch (\Exception $e) {
+                $this->log("FEHLER: Konnte TAR-Archiv nicht entpacken. " . $e->getMessage());
+                return false;
+            }
+        }
+
+        $this->log("FEHLER: Unbekanntes Archiv-Format");
+        return false;
+    }
+
 
     /**
      * Sicheres, rekursives Löschen aller Dateien & Ordner innerhalb eines Verzeichnisses
@@ -137,25 +192,10 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
-     * Führt einen Shell-Befehl aus und speichert das Ergebnis im Log.
-     */
-    private function executeCommand(string $command, string $errorMessage): void
-    {
-        $this->log("Führe Befehl aus: " . $command);
-        $output = shell_exec($command . ' 2>&1');
-        if ($output !== null) {
-            $this->log("BEFEHL AUSGABE: " . trim($output));
-        } else {
-            $this->log($errorMessage);
-        }
-    }
-
-    /**
-     * Speichert eine Nachricht in der Log-Datei.
+     * Loggt die Nachricht über den TYPO3 LogManager.
      */
     private function log(string $message): void
     {
-        $timestamp = date("Y-m-d H:i:s");
-        file_put_contents($this->logFile, "[$timestamp] $message\n", FILE_APPEND);
+        $this->logger?->error($message);
     }
 }
