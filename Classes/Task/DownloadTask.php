@@ -22,6 +22,12 @@ class DownloadTask extends AbstractTask
             return false;
         }
 
+        // SSRF-Schutz: Nur http(s)-URLs erlauben, blockiert file://, phar://, gopher://, etc.
+        if (!$this->isValidDownloadUrl($this->auto_sync_files_file_url)) {
+            $this->log("FEHLER: Ungueltige Download-URL (nur http:// und https:// erlaubt): " . $this->auto_sync_files_file_url);
+            return false;
+        }
+
         try {
             $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
             $response = $requestFactory->request($this->auto_sync_files_file_url, 'GET');
@@ -55,7 +61,20 @@ class DownloadTask extends AbstractTask
     }
 
     /**
-     * Loggt die Nachricht über den TYPO3 LogManager.
+     * Validiert die Download-URL anhand einer Schema-Whitelist (nur http/https).
+     * Verhindert SSRF-Angriffe ueber file://, phar://, gopher:// und aehnliche Wrapper.
+     */
+    private function isValidDownloadUrl(string $url): bool
+    {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+        $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+        return in_array($scheme, ['http', 'https'], true);
+    }
+
+    /**
+     * Loggt die Nachricht ueber den TYPO3 LogManager.
      */
     private function log(string $message): void
     {

@@ -13,22 +13,20 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'plugin',
     'constraints' => [
         'depends' => [
-            'typo3'    => '12.4.0-12.4.99',
-            'scheduler' => '12.4.0-12.4.99'
+            'typo3'     => '12.4.0-12.4.99',
+            'scheduler' => '12.4.0-12.4.99',
         ],
         'conflicts' => [],
         'suggests'  => [],
     ],
     'autoload' => [
         'psr-4' => [
-            'ID\\AutoSyncFiles\\' => 'Classes'
+            'ID\\AutoSyncFiles\\' => 'Classes',
         ],
     ],
-	'state' => 'stable',
-	'uploadfolder' => 0,
-	'createDirs' => '',
-	'author' => 'Sebastian Schmal',
-	'author_email' => 'info@ingeniumdesign.de',
-	'author_company' => 'INGENIUMDESIGN',
-	'version' => '12.0.5',
+    'state' => 'stable',
+    'author' => 'Sebastian Schmal',
+    'author_email' => 'info@ingeniumdesign.de',
+    'author_company' => 'INGENIUMDESIGN',
+    'version' => '12.0.6',
 ];

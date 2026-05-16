@@ -1,35 +1,41 @@
-.well-known
+# === Operating System ===
 .DS_Store
+Thumbs.db
+*.LCK
+
+# === IDEs / Editors ===
 .idea
-.claude
-CLAUDE.md
+.vscode
+nbproject
+*.swp
+*.swo
+*~
+*.bak
+
+# === Composer ===
+vendor/
+composer.lock
+
+# === Node / Frontend Build ===
 node_modules
-npm-debug.log
 bower_components
 dist
 .sass-cache
+npm-debug.log
+yarn-error.log
+
+# === PHP Tooling Caches ===
+.phpunit.result.cache
+.phpunit.cache/
+.phpstan-cache/
+.php-cs-fixer.cache
+.phpcs-cache
+
+# === Local Dev / AI Assistants ===
+.claude
+CLAUDE.md
+
+# === Misc ===
+.well-known
 .awspublish*
 config.json
-nbproject
-*.LCK
-Thumbs.db
-
-# TYPO3 Ignores, Symlinks duerfen kein Slash am Ende haben, werden behandelt wie Dateien #
-/typo3
-/typo3_src
-/typo3temp/
-/uploads/
-/t3lib/
-/index.php
-chmod.php
-DbSettings.php
-
-fileadmin/_processed_/
-fileadmin/_migrated/
-fileadmin/user_upload/
-fileadmin/_temp_/
-typo3conf/l10n/
-typo3conf/ENABLE_INSTALL_TOOL
-typo3conf/deprecation*
-
-ENABLE_INSTALL_TOOL
