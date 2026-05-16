@@ -8,9 +8,9 @@ This extension periodically downloads external files via the TYPO3 Scheduler to 
 
 ## Requirements
 
-- **TYPO3:** 12.4.x
-- **PHP:** 8.1 or higher
-- **TYPO3 Extensions:** `scheduler` (System Extension)
+- **TYPO3:** 12.4.x (only — no support for v10, v11, v13 or v14)
+- **PHP:** 8.1 or higher (enforced via `composer.json`)
+- **TYPO3 System Extensions:** `scheduler`, `extbase`
 - **PHP Extensions:**
   - `ext-zip` – required for ZIP archive extraction
   - `ext-phar` – required for TAR / TAR.GZ extraction (enabled by default)
@@ -36,9 +36,12 @@ composer require ingeniumdesign/auto-sync-files
 ## Features
 
 - **Download Only:** Download an external file and store it locally.
-- **Download & Extract:** Download a compressed archive from a remote URL, extract it, and replace the contents of a target folder.
+- **Download & Extract:** Download a compressed archive from a remote URL, extract it, and either merge into or replace the contents of a target folder.
 - **Optional Cache Clearing:** Clear the TYPO3 frontend cache after a file change.
-- **Flexible Configuration:** Configure the download URL, local path, and cache clearing option via the TYPO3 Scheduler backend (**System > Scheduler**).
+- **Hash-Based Skip:** Both tasks skip downstream work when the source hasn't changed (SHA-256 compare). Saves cache flushes on short cron intervals.
+- **Multilingual UI:** Backend labels and validation messages are localised (English source, German translation included).
+- **Security Hardening:** SSRF schema whitelist (http/https), Zip-Slip protection for ZIP and TAR, path validation against TYPO3 public root, symlink-safe deletion.
+- **Flexible Configuration:** Configure all options via the TYPO3 Scheduler backend (**System > Scheduler**).
 
 ---
 
@@ -95,12 +98,18 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
    - **Local Path:** Specify the **absolute path** to the target folder where the archive should be extracted.
      _Example:_ `/var/www/html/fileadmin/sync/external_assets/`
 
-     > ⚠️ **Warning:** All existing files in this folder will be **deleted** before the new files are copied over. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory.
+     > ℹ️ The target folder itself is **never** deleted — only its contents are managed according to the **Replace Mode** option below. If the folder does not exist yet, it will be created on first run.
+
+   - **Replace Mode (Zielordner komplett ersetzen):** Controls how the existing contents of the target folder are handled.
+     - **Unchecked (default):** *Merge mode* — files from the archive overwrite same-named entries in the target folder; additional files already present in the target folder are kept untouched.
+     - **Checked:** *Replace mode* — all existing files and subfolders inside the target folder are deleted **before** the archive is extracted, leaving a 1:1 copy of the archive contents.
+
+     > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory.
 
    - **Clear Cache:** Tick the checkbox to clear the TYPO3 frontend cache after the update.
 
 3. **Result:**
-   On each scheduled run the archive is downloaded, extracted into a temporary directory, and its contents are moved into the target folder. The previous contents of the target folder are removed first. Your TYPO3 project always contains the latest version of the external files without manual intervention.
+   On each scheduled run the archive is downloaded, hashed against the last successful run (skipped entirely if unchanged), extracted into a temporary directory, and then either merged into or replacing the contents of the target folder — depending on your Replace Mode setting.
 
 ---
 
@@ -119,7 +128,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 ## Important Notes
 
 - **Data Loss Warning:**
-  When using the Download & Extract mode, the entire contents of the specified local folder will be deleted before the new files are placed.
+  When using the Download & Extract mode **with Replace Mode enabled**, the entire contents of the specified local folder will be deleted before the new files are placed. In default Merge mode, only same-named files are overwritten — additional files remain untouched.
   **Never set the Local Path to the root of critical directories like `/fileadmin/`** — only use dedicated subfolders.
 
 - **Configuration:**
