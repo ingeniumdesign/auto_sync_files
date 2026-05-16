@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+    <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2026-05-16T00:00:00Z" product-name="auto_sync_files">
+        <header/>
+        <body>
+
+            <!-- ────────────── Scheduler Task Titles / Descriptions ────────────── -->
+            <trans-unit id="task.downloadOnly.title" approved="yes">
+                <source>Auto Sync Files: Download Only</source>
+                <target>Auto Sync Files: Nur Download</target>
+            </trans-unit>
+            <trans-unit id="task.downloadOnly.description" approved="yes">
+                <source>Download a file from another Webpage periodically to your own Webspace, e.g. the Google-Analytics-Script</source>
+                <target>L&auml;dt periodisch eine externe Datei (z.B. das Google-Analytics-Skript) herunter und speichert sie lokal.</target>
+            </trans-unit>
+            <trans-unit id="task.downloadAndExtract.title" approved="yes">
+                <source>Auto Sync Files: Download &amp; Extract</source>
+                <target>Auto Sync Files: Download &amp; Entpacken</target>
+            </trans-unit>
+            <trans-unit id="task.downloadAndExtract.description" approved="yes">
+                <source>Download an archive (ZIP, TAR, TAR.GZ), then optionally extract or replace existing files or folders.</source>
+                <target>L&auml;dt ein Archiv (ZIP, TAR, TAR.GZ) herunter und entpackt es. Optional: Inhalt des Zielordners ersetzen oder mit bestehenden Dateien zusammenf&uuml;hren.</target>
+            </trans-unit>
+
+            <!-- ────────────── Field Labels ────────────── -->
+            <trans-unit id="field.downloadUrl.label" approved="yes">
+                <source>Download URL</source>
+                <target>Download-URL</target>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.labelWithExample" approved="yes">
+                <source>Download URL (e.g. https://example.com/file.txt)</source>
+                <target>Download-URL (z.B. https://example.com/file.txt)</target>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.placeholder.file" approved="yes">
+                <source>e.g., https://example.com/file.txt</source>
+                <target>z.B. https://example.com/file.txt</target>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.placeholder.archive" approved="yes">
+                <source>e.g., https://example.com/archive.zip</source>
+                <target>z.B. https://example.com/archive.zip</target>
+            </trans-unit>
+            <trans-unit id="field.localPath.label" approved="yes">
+                <source>Local Path (absolute path inside TYPO3 public root)</source>
+                <target>Lokaler Pfad (absoluter Pfad innerhalb des TYPO3 Public Root)</target>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.label" approved="yes">
+                <source>Replace Mode</source>
+                <target>Ersetzungs-Modus</target>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.checkbox" approved="yes">
+                <source>Replace target folder completely (contents will be deleted first)</source>
+                <target>Zielordner komplett ersetzen (Inhalt wird zuvor gel&ouml;scht)</target>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.enabled" approved="yes">
+                <source>If enabled: All files and subfolders inside the target folder will be deleted BEFORE the archive is extracted.</source>
+                <target>Wenn aktiviert: Alle Dateien und Unterordner im Zielordner werden VOR dem Entpacken gel&ouml;scht.</target>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.disabled" approved="yes">
+                <source>If disabled (default): Merge mode &ndash; archive files overwrite same-named entries, additional files in the target folder are kept.</source>
+                <target>Wenn deaktiviert (Standard): Merge-Modus &ndash; Archiv-Dateien &uuml;berschreiben gleichnamige Eintr&auml;ge, zus&auml;tzliche Dateien im Zielordner bleiben erhalten.</target>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.note" approved="yes">
+                <source>The target folder itself is never deleted.</source>
+                <target>Der Zielordner selbst wird nie gel&ouml;scht.</target>
+            </trans-unit>
+            <trans-unit id="field.clearCache.label" approved="yes">
+                <source>Clear Cache</source>
+                <target>Cache leeren</target>
+            </trans-unit>
+            <trans-unit id="field.clearCache.checkbox" approved="yes">
+                <source>Clear Cache after execution if files differ</source>
+                <target>Cache nach Ausf&uuml;hrung leeren, wenn Dateien sich ge&auml;ndert haben</target>
+            </trans-unit>
+
+            <!-- ────────────── Validation Messages ────────────── -->
+            <trans-unit id="validation.url.required" approved="yes">
+                <source>Download URL is required.</source>
+                <target>Download-URL ist erforderlich.</target>
+            </trans-unit>
+            <trans-unit id="validation.url.invalid" approved="yes">
+                <source>Download URL must start with http:// or https://.</source>
+                <target>Download-URL muss mit http:// oder https:// beginnen.</target>
+            </trans-unit>
+            <trans-unit id="validation.path.required" approved="yes">
+                <source>Local Path is required.</source>
+                <target>Lokaler Pfad ist erforderlich.</target>
+            </trans-unit>
+
+            <!-- ────────────── Runtime Error Messages ────────────── -->
+            <trans-unit id="error.noTargetOrUrl" approved="yes">
+                <source>ERROR: No target path or download URL provided.</source>
+                <target>FEHLER: Kein Zielpfad oder Download-URL angegeben.</target>
+            </trans-unit>
+            <trans-unit id="error.invalidUrl" approved="yes">
+                <source>ERROR: Invalid download URL (only http:// and https:// allowed): %s</source>
+                <target>FEHLER: Ung&uuml;ltige Download-URL (nur http:// und https:// erlaubt): %s</target>
+            </trans-unit>
+            <trans-unit id="error.pathOutsidePublic" approved="yes">
+                <source>ERROR: Target path must be within TYPO3 public path (%s): %s</source>
+                <target>FEHLER: Zielpfad muss innerhalb des TYPO3 Public Path (%s) liegen: %s</target>
+            </trans-unit>
+            <trans-unit id="error.targetIsSymlink" approved="yes">
+                <source>ERROR: Target path is a symlink. Not supported for security reasons: %s</source>
+                <target>FEHLER: Zielpfad ist ein Symlink. Aus Sicherheitsgr&uuml;nden nicht unterst&uuml;tzt: %s</target>
+            </trans-unit>
+            <trans-unit id="error.targetNotWritable" approved="yes">
+                <source>ERROR: No write permissions on existing directory: %s</source>
+                <target>FEHLER: Keine Schreibrechte f&uuml;r das bestehende Verzeichnis: %s</target>
+            </trans-unit>
+            <trans-unit id="error.parentNotWritable" approved="yes">
+                <source>ERROR: Parent directory not writable: %s</source>
+                <target>FEHLER: &Uuml;bergeordnetes Verzeichnis nicht beschreibbar: %s</target>
+            </trans-unit>
+            <trans-unit id="error.httpStatus" approved="yes">
+                <source>ERROR: HTTP Status %d</source>
+                <target>FEHLER: HTTP Status %d</target>
+            </trans-unit>
+            <trans-unit id="error.downloadFailed" approved="yes">
+                <source>ERROR: Could not download file. %s</source>
+                <target>FEHLER: Konnte Datei nicht herunterladen. %s</target>
+            </trans-unit>
+            <trans-unit id="error.tempFileMissing" approved="yes">
+                <source>ERROR: Downloaded file is not present.</source>
+                <target>FEHLER: Heruntergeladene Datei ist nicht vorhanden.</target>
+            </trans-unit>
+            <trans-unit id="error.tempArchiveMissing" approved="yes">
+                <source>ERROR: Downloaded archive file is not present.</source>
+                <target>FEHLER: Heruntergeladene Archiv-Datei ist nicht vorhanden.</target>
+            </trans-unit>
+            <trans-unit id="error.tempArchiveEmpty" approved="yes">
+                <source>ERROR: Downloaded archive file is empty or not readable.</source>
+                <target>FEHLER: Heruntergeladene Archiv-Datei ist leer oder nicht lesbar.</target>
+            </trans-unit>
+            <trans-unit id="error.hashFailed" approved="yes">
+                <source>ERROR: Could not compute SHA-256 hash of the downloaded file.</source>
+                <target>FEHLER: Konnte SHA-256-Hash der heruntergeladenen Datei nicht berechnen.</target>
+            </trans-unit>
+            <trans-unit id="error.parentMkdirFailed" approved="yes">
+                <source>ERROR: Could not create parent directory: %s</source>
+                <target>FEHLER: Konnte &uuml;bergeordnetes Verzeichnis nicht anlegen: %s</target>
+            </trans-unit>
+            <trans-unit id="error.targetMkdirFailed" approved="yes">
+                <source>ERROR: Could not create target directory: %s</source>
+                <target>FEHLER: Konnte Zielverzeichnis nicht anlegen: %s</target>
+            </trans-unit>
+            <trans-unit id="error.mergeTargetMkdirFailed" approved="yes">
+                <source>ERROR: Could not create target directory for merge: %s</source>
+                <target>FEHLER: Konnte Zielverzeichnis f&uuml;r Merge nicht anlegen: %s</target>
+            </trans-unit>
+            <trans-unit id="error.writeFailed" approved="yes">
+                <source>ERROR: Could not move/copy downloaded file to %s.</source>
+                <target>FEHLER: Konnte heruntergeladene Datei nicht nach %s verschieben/kopieren.</target>
+            </trans-unit>
+            <trans-unit id="error.unknownArchiveFormat" approved="yes">
+                <source>ERROR: Unknown archive format.</source>
+                <target>FEHLER: Unbekanntes Archiv-Format.</target>
+            </trans-unit>
+            <trans-unit id="error.zipExtensionMissing" approved="yes">
+                <source>ERROR: PHP extension 'zip' is not installed.</source>
+                <target>FEHLER: PHP-Erweiterung 'zip' ist nicht installiert.</target>
+            </trans-unit>
+            <trans-unit id="error.pharExtensionMissing" approved="yes">
+                <source>ERROR: PHP extension 'phar' is not available.</source>
+                <target>FEHLER: PHP-Erweiterung 'phar' ist nicht verf&uuml;gbar.</target>
+            </trans-unit>
+            <trans-unit id="error.zipOpenFailed" approved="yes">
+                <source>ERROR: Could not open ZIP archive.</source>
+                <target>FEHLER: Konnte ZIP-Archiv nicht &ouml;ffnen.</target>
+            </trans-unit>
+            <trans-unit id="error.tarExtractFailed" approved="yes">
+                <source>ERROR: Could not extract TAR archive. %s</source>
+                <target>FEHLER: Konnte TAR-Archiv nicht entpacken. %s</target>
+            </trans-unit>
+            <trans-unit id="error.zipSlipZip" approved="yes">
+                <source>ERROR: Unsafe path in ZIP archive rejected (Zip-Slip): %s</source>
+                <target>FEHLER: Unsicherer Pfad im ZIP-Archiv abgewiesen (Zip-Slip): %s</target>
+            </trans-unit>
+            <trans-unit id="error.zipSlipTar" approved="yes">
+                <source>ERROR: Unsafe path in TAR archive rejected (Zip-Slip): %s</source>
+                <target>FEHLER: Unsicherer Pfad im TAR-Archiv abgewiesen (Zip-Slip): %s</target>
+            </trans-unit>
+            <trans-unit id="error.moveSourceMissing" approved="yes">
+                <source>ERROR: Source directory for move does not exist: %s</source>
+                <target>FEHLER: Quellverzeichnis f&uuml;r Move existiert nicht: %s</target>
+            </trans-unit>
+            <trans-unit id="error.mergeSourceMissing" approved="yes">
+                <source>ERROR: Source directory for merge does not exist: %s</source>
+                <target>FEHLER: Quellverzeichnis f&uuml;r Merge existiert nicht: %s</target>
+            </trans-unit>
+            <trans-unit id="error.renameFailed" approved="yes">
+                <source>ERROR: Could not move file: %s -&gt; %s</source>
+                <target>FEHLER: Konnte Datei nicht verschieben: %s -&gt; %s</target>
+            </trans-unit>
+            <trans-unit id="error.renameFailedMerge" approved="yes">
+                <source>ERROR: Could not move file (merge): %s -&gt; %s</source>
+                <target>FEHLER: Konnte Datei nicht verschieben (Merge): %s -&gt; %s</target>
+            </trans-unit>
+
+        </body>
+    </file>
+</xliff>

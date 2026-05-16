@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+    <file source-language="en" datatype="plaintext" original="messages" date="2026-05-16T00:00:00Z" product-name="auto_sync_files">
+        <header/>
+        <body>
+
+            <!-- ────────────── Scheduler Task Titles / Descriptions ────────────── -->
+            <trans-unit id="task.downloadOnly.title">
+                <source>Auto Sync Files: Download Only</source>
+            </trans-unit>
+            <trans-unit id="task.downloadOnly.description">
+                <source>Download a file from another Webpage periodically to your own Webspace, e.g. the Google-Analytics-Script</source>
+            </trans-unit>
+            <trans-unit id="task.downloadAndExtract.title">
+                <source>Auto Sync Files: Download &amp; Extract</source>
+            </trans-unit>
+            <trans-unit id="task.downloadAndExtract.description">
+                <source>Download an archive (ZIP, TAR, TAR.GZ), then optionally extract or replace existing files or folders.</source>
+            </trans-unit>
+
+            <!-- ────────────── Field Labels ────────────── -->
+            <trans-unit id="field.downloadUrl.label">
+                <source>Download URL</source>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.labelWithExample">
+                <source>Download URL (e.g. https://example.com/file.txt)</source>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.placeholder.file">
+                <source>e.g., https://example.com/file.txt</source>
+            </trans-unit>
+            <trans-unit id="field.downloadUrl.placeholder.archive">
+                <source>e.g., https://example.com/archive.zip</source>
+            </trans-unit>
+            <trans-unit id="field.localPath.label">
+                <source>Local Path (absolute path inside TYPO3 public root)</source>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.label">
+                <source>Replace Mode</source>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.checkbox">
+                <source>Replace target folder completely (contents will be deleted first)</source>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.enabled">
+                <source>If enabled: All files and subfolders inside the target folder will be deleted BEFORE the archive is extracted.</source>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.disabled">
+                <source>If disabled (default): Merge mode &ndash; archive files overwrite same-named entries, additional files in the target folder are kept.</source>
+            </trans-unit>
+            <trans-unit id="field.replaceMode.help.note">
+                <source>The target folder itself is never deleted.</source>
+            </trans-unit>
+            <trans-unit id="field.clearCache.label">
+                <source>Clear Cache</source>
+            </trans-unit>
+            <trans-unit id="field.clearCache.checkbox">
+                <source>Clear Cache after execution if files differ</source>
+            </trans-unit>
+
+            <!-- ────────────── Validation Messages (Backend Flash) ────────────── -->
+            <trans-unit id="validation.url.required">
+                <source>Download URL is required.</source>
+            </trans-unit>
+            <trans-unit id="validation.url.invalid">
+                <source>Download URL must start with http:// or https://.</source>
+            </trans-unit>
+            <trans-unit id="validation.path.required">
+                <source>Local Path is required.</source>
+            </trans-unit>
+
+            <!-- ────────────── Runtime Error Messages (Logs) ────────────── -->
+            <trans-unit id="error.noTargetOrUrl">
+                <source>ERROR: No target path or download URL provided.</source>
+            </trans-unit>
+            <trans-unit id="error.invalidUrl">
+                <source>ERROR: Invalid download URL (only http:// and https:// allowed): %s</source>
+            </trans-unit>
+            <trans-unit id="error.pathOutsidePublic">
+                <source>ERROR: Target path must be within TYPO3 public path (%s): %s</source>
+            </trans-unit>
+            <trans-unit id="error.targetIsSymlink">
+                <source>ERROR: Target path is a symlink. Not supported for security reasons: %s</source>
+            </trans-unit>
+            <trans-unit id="error.targetNotWritable">
+                <source>ERROR: No write permissions on existing directory: %s</source>
+            </trans-unit>
+            <trans-unit id="error.parentNotWritable">
+                <source>ERROR: Parent directory not writable: %s</source>
+            </trans-unit>
+            <trans-unit id="error.httpStatus">
+                <source>ERROR: HTTP Status %d</source>
+            </trans-unit>
+            <trans-unit id="error.downloadFailed">
+                <source>ERROR: Could not download file. %s</source>
+            </trans-unit>
+            <trans-unit id="error.tempFileMissing">
+                <source>ERROR: Downloaded file is not present.</source>
+            </trans-unit>
+            <trans-unit id="error.tempArchiveMissing">
+                <source>ERROR: Downloaded archive file is not present.</source>
+            </trans-unit>
+            <trans-unit id="error.tempArchiveEmpty">
+                <source>ERROR: Downloaded archive file is empty or not readable.</source>
+            </trans-unit>
+            <trans-unit id="error.hashFailed">
+                <source>ERROR: Could not compute SHA-256 hash of the downloaded file.</source>
+            </trans-unit>
+            <trans-unit id="error.parentMkdirFailed">
+                <source>ERROR: Could not create parent directory: %s</source>
+            </trans-unit>
+            <trans-unit id="error.targetMkdirFailed">
+                <source>ERROR: Could not create target directory: %s</source>
+            </trans-unit>
+            <trans-unit id="error.mergeTargetMkdirFailed">
+                <source>ERROR: Could not create target directory for merge: %s</source>
+            </trans-unit>
+            <trans-unit id="error.writeFailed">
+                <source>ERROR: Could not move/copy downloaded file to %s.</source>
+            </trans-unit>
+            <trans-unit id="error.unknownArchiveFormat">
+                <source>ERROR: Unknown archive format.</source>
+            </trans-unit>
+            <trans-unit id="error.zipExtensionMissing">
+                <source>ERROR: PHP extension 'zip' is not installed.</source>
+            </trans-unit>
+            <trans-unit id="error.pharExtensionMissing">
+                <source>ERROR: PHP extension 'phar' is not available.</source>
+            </trans-unit>
+            <trans-unit id="error.zipOpenFailed">
+                <source>ERROR: Could not open ZIP archive.</source>
+            </trans-unit>
+            <trans-unit id="error.tarExtractFailed">
+                <source>ERROR: Could not extract TAR archive. %s</source>
+            </trans-unit>
+            <trans-unit id="error.zipSlipZip">
+                <source>ERROR: Unsafe path in ZIP archive rejected (Zip-Slip): %s</source>
+            </trans-unit>
+            <trans-unit id="error.zipSlipTar">
+                <source>ERROR: Unsafe path in TAR archive rejected (Zip-Slip): %s</source>
+            </trans-unit>
+            <trans-unit id="error.moveSourceMissing">
+                <source>ERROR: Source directory for move does not exist: %s</source>
+            </trans-unit>
+            <trans-unit id="error.mergeSourceMissing">
+                <source>ERROR: Source directory for merge does not exist: %s</source>
+            </trans-unit>
+            <trans-unit id="error.renameFailed">
+                <source>ERROR: Could not move file: %s -&gt; %s</source>
+            </trans-unit>
+            <trans-unit id="error.renameFailedMerge">
+                <source>ERROR: Could not move file (merge): %s -&gt; %s</source>
+            </trans-unit>
+
+        </body>
+    </file>
+</xliff>
