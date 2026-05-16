@@ -9,93 +9,143 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Http\RequestFactory;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Registry;
 
 class DownloadAndExtractTask extends AbstractTask
 {
+    use AutoSyncTaskTrait;
+
     public string $auto_sync_files_file_url = '';
     public string $auto_sync_files_local_path = '';
     public string $auto_sync_files_clear_cache = '';
+    /**
+     * Wenn 'on': Zielordner-Inhalt wird VOR dem Entpacken komplett geloescht.
+     * Wenn 'off' (oder leer, Default): Merge-Modus.
+     */
+    public string $auto_sync_files_replace_folder_contents = '';
+
+    private const REGISTRY_NAMESPACE = 'tx_auto_sync_files';
 
     public function execute(): bool
     {
         if ($this->auto_sync_files_local_path === '' || $this->auto_sync_files_file_url === '') {
-            $this->log("FEHLER: Kein Zielpfad oder Download-URL angegeben.");
-            return false;
+            return $this->logAndReturnFalse('error.noTargetOrUrl');
         }
 
-        // SSRF-Schutz: Nur http(s)-URLs erlauben
         if (!$this->isValidDownloadUrl($this->auto_sync_files_file_url)) {
-            $this->log("FEHLER: Ungueltige Download-URL (nur http:// und https:// erlaubt): " . $this->auto_sync_files_file_url);
-            return false;
+            return $this->logAndReturnFalse('error.invalidUrl', [$this->auto_sync_files_file_url]);
         }
 
-        // Path-Validierung: Zielpfad MUSS innerhalb des TYPO3 Public Path liegen.
-        // Schuetzt davor, dass bei Fehlkonfiguration (z.B. "/var/" oder "/etc/")
-        // versehentlich kritische Systemverzeichnisse geleert werden.
         if (!$this->isPathWithinPublicRoot($this->auto_sync_files_local_path)) {
-            $this->log("FEHLER: Zielpfad muss innerhalb des TYPO3 Public Path (" . Environment::getPublicPath() . ") liegen: " . $this->auto_sync_files_local_path);
-            return false;
+            return $this->logAndReturnFalse('error.pathOutsidePublic', [Environment::getPublicPath(), $this->auto_sync_files_local_path]);
         }
 
-        // Zielverzeichnis vorbereiten
+        if (is_link($this->auto_sync_files_local_path)) {
+            return $this->logAndReturnFalse('error.targetIsSymlink', [$this->auto_sync_files_local_path]);
+        }
+
+        // Pre-Check: Schreibrechte VOR teurem Download (aber noch NICHT loeschen!)
         if (is_dir($this->auto_sync_files_local_path)) {
             if (!is_writable($this->auto_sync_files_local_path)) {
-                $this->log("FEHLER: Keine Schreibrechte fuer das bestehende Verzeichnis: " . $this->auto_sync_files_local_path);
-                return false;
+                return $this->logAndReturnFalse('error.targetNotWritable', [$this->auto_sync_files_local_path]);
             }
-            $this->deleteFolderContents($this->auto_sync_files_local_path);
         } else {
             $parentDir = dirname($this->auto_sync_files_local_path);
-            if (!is_writable($parentDir)) {
-                $this->log("FEHLER: Keine Schreibrechte fuer das uebergeordnete Verzeichnis: " . $parentDir);
-                return false;
-            }
-            GeneralUtility::mkdir_deep($this->auto_sync_files_local_path);
-            if (!is_dir($this->auto_sync_files_local_path)) {
-                $this->log("FEHLER: Konnte das Zielverzeichnis nicht erstellen: " . $this->auto_sync_files_local_path);
-                return false;
+            if (!is_dir($parentDir) || !is_writable($parentDir)) {
+                return $this->logAndReturnFalse('error.parentNotWritable', [$parentDir]);
             }
         }
 
-        // Eindeutige Temp-Pfade pro Scheduler-Task-UID.
-        // Verhindert Race Conditions, wenn mehrere Tasks dieser Extension parallel laufen.
+        // Eindeutige Temp-Pfade: taskUid + Run-ID (Schutz auch bei multiple=true)
         $taskUid = $this->getTaskUid();
+        $runId = bin2hex(random_bytes(4));
+        $tempSuffix = ($taskUid > 0 ? (string)$taskUid : 'new') . '_' . $runId;
         $fileExtension = $this->getArchiveExtension($this->auto_sync_files_file_url);
-        $tempFile = Environment::getPublicPath() . "/typo3temp/auto_sync_files_archive_{$taskUid}{$fileExtension}";
-        $tempExtractDir = Environment::getPublicPath() . "/typo3temp/auto_sync_files_extract_{$taskUid}/";
+        $tempFile = Environment::getPublicPath() . "/typo3temp/auto_sync_files_archive_{$tempSuffix}{$fileExtension}";
+        $tempExtractDir = Environment::getPublicPath() . "/typo3temp/auto_sync_files_extract_{$tempSuffix}/";
+
+        $replaceMode = $this->auto_sync_files_replace_folder_contents === 'on';
 
         try {
-            // Download der Archiv-Datei
+            // 1. Streaming-Download direkt in Temp-Datei
             try {
                 $requestFactory = GeneralUtility::makeInstance(RequestFactory::class);
-                $response = $requestFactory->request($this->auto_sync_files_file_url, 'GET');
+                $response = $requestFactory->request(
+                    $this->auto_sync_files_file_url,
+                    'GET',
+                    ['sink' => $tempFile]
+                );
                 if ($response->getStatusCode() !== 200) {
-                    $this->log("FEHLER: HTTP Status " . $response->getStatusCode());
-                    return false;
+                    return $this->logAndReturnFalse('error.httpStatus', [$response->getStatusCode()]);
                 }
-                $archiveContent = $response->getBody()->getContents();
             } catch (\Exception $e) {
-                $this->log("FEHLER: Konnte Datei nicht herunterladen. " . $e->getMessage());
-                return false;
+                return $this->logAndReturnFalse('error.downloadFailed', [$e->getMessage()]);
             }
 
-            if (@file_put_contents($tempFile, $archiveContent) === false) {
-                $this->log("FEHLER: Konnte temporaere Archiv-Datei nicht speichern.");
-                return false;
+            if (!is_file($tempFile)) {
+                return $this->logAndReturnFalse('error.tempArchiveMissing');
             }
+            $size = filesize($tempFile);
+            if ($size === false || $size === 0) {
+                return $this->logAndReturnFalse('error.tempArchiveEmpty');
+            }
+
+            // 2. Hash-Vergleich: Skip wenn Archiv bitidentisch mit letztem Lauf.
+            $newHash = hash_file('sha256', $tempFile);
+            if ($newHash === false) {
+                return $this->logAndReturnFalse('error.hashFailed');
+            }
+
+            $useHashCache = $taskUid > 0;
+            $registry = $useHashCache ? GeneralUtility::makeInstance(Registry::class) : null;
+            $registryKey = 'archive_hash_' . $taskUid;
+
+            if ($useHashCache) {
+                $lastHash = (string)$registry->get(self::REGISTRY_NAMESPACE, $registryKey, '');
+
+                if ($newHash === $lastHash
+                    && is_dir($this->auto_sync_files_local_path)
+                    && !$this->isFolderEmpty($this->auto_sync_files_local_path)
+                ) {
+                    return true;
+                }
+            }
+
+            // 3. Zielverzeichnis vorbereiten (nur loeschen, wenn Replace-Mode aktiv)
+            if (is_dir($this->auto_sync_files_local_path)) {
+                if ($replaceMode) {
+                    $this->deleteFolderContents($this->auto_sync_files_local_path);
+                }
+            } else {
+                GeneralUtility::mkdir_deep($this->auto_sync_files_local_path);
+                if (!is_dir($this->auto_sync_files_local_path)) {
+                    return $this->logAndReturnFalse('error.targetMkdirFailed', [$this->auto_sync_files_local_path]);
+                }
+            }
+
             if (!is_dir($tempExtractDir)) {
                 GeneralUtility::mkdir_deep($tempExtractDir);
             }
 
-            // Archiv entpacken (mit Zip-Slip-Schutz)
+            // 4. Entpacken (mit Zip-Slip-Schutz)
             if (!$this->extractArchive($tempFile, $tempExtractDir)) {
                 return false;
             }
 
-            // Entpackte Dateien ins Zielverzeichnis verschieben
-            $this->moveFolderContents($tempExtractDir, $this->auto_sync_files_local_path);
+            // 5. Entpackte Dateien ins Zielverzeichnis bringen
+            $movedSuccessfully = $replaceMode
+                ? $this->moveFolderContents($tempExtractDir, $this->auto_sync_files_local_path)
+                : $this->mergeFolderContents($tempExtractDir, $this->auto_sync_files_local_path);
 
-            // Cache leeren
+            if (!$movedSuccessfully) {
+                return false;
+            }
+
+            // 6. Hash persistieren + Cache leeren
+            if ($useHashCache) {
+                $registry->set(self::REGISTRY_NAMESPACE, $registryKey, $newHash);
+            }
+
             if ($this->auto_sync_files_clear_cache === 'on') {
                 $cacheManager = GeneralUtility::makeInstance(CacheManager::class);
                 $cacheManager->flushCachesInGroup('pages');
@@ -103,8 +153,7 @@ class DownloadAndExtractTask extends AbstractTask
 
             return true;
         } finally {
-            // Cleanup: Temp-Dateien IMMER entfernen, auch im Fehlerfall.
-            // Verhindert, dass typo3temp/ ueber die Zeit mit Muell vollaeuft.
+            // Cleanup: Temp-Dateien IMMER entfernen, auch im Fehlerfall
             if (is_dir($tempExtractDir)) {
                 $this->deleteFolderContents($tempExtractDir);
                 @rmdir($tempExtractDir);
@@ -116,48 +165,18 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
-     * Validiert die Download-URL anhand einer Schema-Whitelist (nur http/https).
-     * Verhindert SSRF-Angriffe ueber file://, phar://, gopher:// und aehnliche Wrapper.
+     * Prueft, ob ein Verzeichnis leer ist (nur '.' und '..' enthaelt).
      */
-    private function isValidDownloadUrl(string $url): bool
+    private function isFolderEmpty(string $folder): bool
     {
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-            return false;
+        if (!is_dir($folder)) {
+            return true;
         }
-        $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
-        return in_array($scheme, ['http', 'https'], true);
-    }
-
-    /**
-     * Stellt sicher, dass der Zielpfad innerhalb des TYPO3 Public Path liegt.
-     * Verhindert, dass beim Loeschen versehentlich Systemverzeichnisse betroffen sind.
-     */
-    private function isPathWithinPublicRoot(string $targetPath): bool
-    {
-        $publicRoot = realpath(Environment::getPublicPath());
-        if ($publicRoot === false) {
-            return false;
+        $entries = scandir($folder);
+        if ($entries === false) {
+            return true;
         }
-
-        // Bestehende Pfade: realpath direkt aufloesen.
-        // Noch nicht existierende Pfade: parent muss aufloesbar sein.
-        if (file_exists($targetPath)) {
-            $resolved = realpath($targetPath);
-        } else {
-            $parent = realpath(dirname($targetPath));
-            if ($parent === false) {
-                return false;
-            }
-            $resolved = $parent . DIRECTORY_SEPARATOR . basename($targetPath);
-        }
-
-        if ($resolved === false || $resolved === '') {
-            return false;
-        }
-
-        // Pfad MUSS innerhalb von publicRoot liegen (oder gleich sein)
-        return $resolved === $publicRoot
-            || str_starts_with($resolved, $publicRoot . DIRECTORY_SEPARATOR);
+        return count(array_diff($entries, ['.', '..'])) === 0;
     }
 
     /**
@@ -168,16 +187,12 @@ class DownloadAndExtractTask extends AbstractTask
         $path = parse_url($urlOrFilename, PHP_URL_PATH);
         $filename = basename(is_string($path) && $path !== '' ? $path : $urlOrFilename);
 
-        if (str_ends_with($filename, '.tar.gz')) {
-            return '.tar.gz';
-        }
-        if (str_ends_with($filename, '.tgz')) {
-            return '.tgz';
-        }
-        if (str_ends_with($filename, '.tar')) {
-            return '.tar';
-        }
-        return '.zip';
+        return match (true) {
+            str_ends_with($filename, '.tar.gz') => '.tar.gz',
+            str_ends_with($filename, '.tgz')    => '.tgz',
+            str_ends_with($filename, '.tar')    => '.tar',
+            default                             => '.zip',
+        };
     }
 
     /**
@@ -185,41 +200,33 @@ class DownloadAndExtractTask extends AbstractTask
      */
     private function extractArchive(string $archiveFile, string $targetDir): bool
     {
-        $extension = $this->getArchiveExtension($archiveFile);
-
-        if ($extension === '.zip') {
-            return $this->extractZip($archiveFile, $targetDir);
-        }
-        if (in_array($extension, ['.tar', '.tar.gz', '.tgz'], true)) {
-            return $this->extractTar($archiveFile, $targetDir);
-        }
-
-        $this->log("FEHLER: Unbekanntes Archiv-Format");
-        return false;
+        return match ($this->getArchiveExtension($archiveFile)) {
+            '.zip'                    => $this->extractZip($archiveFile, $targetDir),
+            '.tar', '.tar.gz', '.tgz' => $this->extractTar($archiveFile, $targetDir),
+            default                   => $this->logAndReturnFalse('error.unknownArchiveFormat'),
+        };
     }
 
     /**
-     * ZIP-Entpacker mit Zip-Slip-Schutz: validiert alle Eintrags-Pfade
-     * BEVOR extractTo() aufgerufen wird.
+     * ZIP-Entpacker mit Zip-Slip-Schutz.
      */
     private function extractZip(string $archiveFile, string $targetDir): bool
     {
         if (!class_exists(\ZipArchive::class)) {
-            $this->log("FEHLER: PHP-Erweiterung 'zip' ist nicht installiert");
-            return false;
+            return $this->logAndReturnFalse('error.zipExtensionMissing');
         }
 
         $zip = new \ZipArchive();
         if ($zip->open($archiveFile) !== true) {
-            $this->log("FEHLER: Konnte ZIP-Archiv nicht oeffnen");
-            return false;
+            return $this->logAndReturnFalse('error.zipOpenFailed');
         }
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = (string)$zip->getNameIndex($i);
             if (!$this->isSafeArchivePath($name)) {
+                // Cleanup VOR return - kann nicht logAndReturnFalse nutzen, weil $zip->close() dazwischen muss
                 $zip->close();
-                $this->log("FEHLER: Unsicherer Pfad im ZIP-Archiv abgewiesen (Zip-Slip): " . $name);
+                $this->logKey('error.zipSlipZip', [$name]);
                 return false;
             }
         }
@@ -230,57 +237,51 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
-     * TAR/TAR.GZ-Entpacker mit Zip-Slip-Schutz: iteriert ueber das Phar-Archiv
-     * via Stream-Wrapper und validiert alle Eintrags-Pfade vor extractTo().
+     * TAR/TAR.GZ-Entpacker mit Zip-Slip-Schutz.
      */
     private function extractTar(string $archiveFile, string $targetDir): bool
     {
         if (!class_exists(\PharData::class)) {
-            $this->log("FEHLER: PHP-Erweiterung 'phar' ist nicht verfuegbar");
-            return false;
+            return $this->logAndReturnFalse('error.pharExtensionMissing');
         }
 
         try {
             $phar = new \PharData($archiveFile);
 
-            $pharPrefix = 'phar://' . $archiveFile . '/';
+            // Phar-Stream-Wrapper erwartet Forward-Slashes (auch unter Windows)
+            $normalizedArchive = str_replace('\\', '/', $archiveFile);
+            $pharPrefix = 'phar://' . $normalizedArchive . '/';
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator(
-                    'phar://' . $archiveFile,
+                    'phar://' . $normalizedArchive,
                     \FilesystemIterator::SKIP_DOTS
                 )
             );
             foreach ($iterator as $entry) {
                 $relPath = substr((string)$entry->getPathname(), strlen($pharPrefix));
                 if (!$this->isSafeArchivePath($relPath)) {
-                    $this->log("FEHLER: Unsicherer Pfad im TAR-Archiv abgewiesen (Zip-Slip): " . $relPath);
-                    return false;
+                    return $this->logAndReturnFalse('error.zipSlipTar', [$relPath]);
                 }
             }
 
             $phar->extractTo($targetDir, null, true);
             return true;
         } catch (\Exception $e) {
-            $this->log("FEHLER: Konnte TAR-Archiv nicht entpacken. " . $e->getMessage());
-            return false;
+            return $this->logAndReturnFalse('error.tarExtractFailed', [$e->getMessage()]);
         }
     }
 
     /**
-     * Prueft, ob ein Archiv-interner Pfad sicher ist:
-     * - keine absoluten Pfade (Unix oder Windows)
-     * - keine '..'-Komponenten (Path-Traversal)
+     * Prueft, ob ein Archiv-interner Pfad sicher ist (keine absoluten Pfade, kein Path-Traversal).
      */
     private function isSafeArchivePath(string $path): bool
     {
         $normalized = str_replace('\\', '/', $path);
 
-        // Absolute Pfade ablehnen
         if (str_starts_with($normalized, '/') || preg_match('#^[A-Za-z]:#', $normalized) === 1) {
             return false;
         }
 
-        // '..' in jeder Pfadkomponente ablehnen
         foreach (explode('/', $normalized) as $part) {
             if ($part === '..') {
                 return false;
@@ -292,9 +293,7 @@ class DownloadAndExtractTask extends AbstractTask
 
     /**
      * Rekursives Loeschen aller Dateien & Ordner innerhalb eines Verzeichnisses.
-     * WICHTIG: Symlinks werden NIEMALS verfolgt - sie werden direkt entfernt.
-     * Andernfalls koennte ein Symlink im Zielverzeichnis dazu fuehren, dass
-     * Daten ausserhalb des Zielverzeichnisses geloescht werden.
+     * Symlinks werden NIEMALS verfolgt, sondern direkt entfernt.
      */
     private function deleteFolderContents(string $folder): void
     {
@@ -319,12 +318,12 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
-     * Verschiebt alle Dateien & Unterordner von $source nach $destination.
+     * Verschiebt alle Dateien & Unterordner (Replace-Mode: Ziel ist leer).
      */
-    private function moveFolderContents(string $source, string $destination): void
+    private function moveFolderContents(string $source, string $destination): bool
     {
         if (!is_dir($source)) {
-            return;
+            return $this->logAndReturnFalse('error.moveSourceMissing', [$source]);
         }
         foreach (scandir($source) as $file) {
             if ($file === '.' || $file === '..') {
@@ -332,15 +331,69 @@ class DownloadAndExtractTask extends AbstractTask
             }
             $srcPath = $source . DIRECTORY_SEPARATOR . $file;
             $destPath = $destination . DIRECTORY_SEPARATOR . $file;
-            rename($srcPath, $destPath);
+            if (!@rename($srcPath, $destPath)) {
+                return $this->logAndReturnFalse('error.renameFailed', [$srcPath, $destPath]);
+            }
         }
+        return true;
     }
 
     /**
-     * Loggt die Nachricht ueber den TYPO3 LogManager.
+     * Rekursive Verschmelzung von $source in $destination (Merge-Mode).
      */
-    private function log(string $message): void
+    private function mergeFolderContents(string $source, string $destination): bool
     {
-        $this->logger?->error($message);
+        if (!is_dir($source)) {
+            return $this->logAndReturnFalse('error.mergeSourceMissing', [$source]);
+        }
+        if (!is_dir($destination)) {
+            GeneralUtility::mkdir_deep($destination);
+            if (!is_dir($destination)) {
+                return $this->logAndReturnFalse('error.mergeTargetMkdirFailed', [$destination]);
+            }
+        }
+
+        foreach (scandir($source) as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $srcPath = $source . DIRECTORY_SEPARATOR . $entry;
+            $destPath = $destination . DIRECTORY_SEPARATOR . $entry;
+
+            // Quelle ist ein Ordner (kein Symlink): rekursiv mergen
+            if (!is_link($srcPath) && is_dir($srcPath)) {
+                // Wenn Ziel ein Symlink ist (egal ob auf Datei oder Ordner), zuerst entfernen.
+                // Sonst wuerde der rekursive Merge dem Symlink folgen und ausserhalb des
+                // Zielordners hineinschreiben.
+                if (is_link($destPath)) {
+                    @unlink($destPath);
+                } elseif (is_file($destPath)) {
+                    @unlink($destPath);
+                }
+                if (!$this->mergeFolderContents($srcPath, $destPath)) {
+                    return false;
+                }
+                @rmdir($srcPath);
+                continue;
+            }
+
+            // Quelle ist eine Datei oder Symlink: Ziel ggf. entfernen, dann rename
+            if (file_exists($destPath) || is_link($destPath)) {
+                if (is_link($destPath)) {
+                    @unlink($destPath);
+                } elseif (is_dir($destPath)) {
+                    $this->deleteFolderContents($destPath);
+                    @rmdir($destPath);
+                } else {
+                    @unlink($destPath);
+                }
+            }
+
+            if (!@rename($srcPath, $destPath)) {
+                return $this->logAndReturnFalse('error.renameFailedMerge', [$srcPath, $destPath]);
+            }
+        }
+
+        return true;
     }
 }
