@@ -44,7 +44,7 @@
                 <source>If enabled: All files and subfolders inside the target folder will be deleted BEFORE the archive is extracted.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.disabled">
-                <source>If disabled (default): Merge mode &ndash; archive files overwrite same-named entries, additional files in the target folder are kept.</source>
+                <source>If disabled (default): Merge mode – archive files overwrite same-named entries, additional files in the target folder are kept.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.note">
                 <source>The target folder itself is never deleted.</source>
