@@ -102,7 +102,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 
    - **Replace Mode (Zielordner komplett ersetzen):** Controls how the existing contents of the target folder are handled.
      - **Unchecked (default):** *Merge mode* — files from the archive overwrite same-named entries in the target folder; additional files already present in the target folder are kept untouched.
-     - **Checked:** *Replace mode* — all existing files and subfolders inside the target folder are deleted **before** the archive is extracted, leaving a 1:1 copy of the archive contents.
+     - **Checked:** *Replace mode* — all existing files and subfolders inside the target folder are deleted and replaced by the archive contents, leaving a 1:1 copy of the archive. The deletion only happens after the archive has been extracted successfully; if extraction fails, the target folder is left untouched.
 
      > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory.
 
@@ -119,7 +119,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
   Downloads the specified external file. If a new version is detected (byte-level comparison with the existing local file), it replaces the old file and optionally clears the cache.
 
 - **Download & Extract Task:**
-  Downloads a compressed archive, extracts its contents to a temporary directory, deletes the current contents of the target folder, and moves the extracted files into place.
+  Downloads a compressed archive and extracts it into a temporary directory. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
 
 **Logging:** Errors during execution are logged via the TYPO3 LogManager and can be reviewed in the standard TYPO3 logging output (configurable in your `LocalConfiguration.php` / `additional.php`).
 
