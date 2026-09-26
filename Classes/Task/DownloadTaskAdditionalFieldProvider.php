@@ -15,56 +15,67 @@ class DownloadTaskAdditionalFieldProvider extends AbstractAdditionalFieldProvide
 {
     private const LL = 'LLL:EXT:auto_sync_files/Resources/Private/Language/locallang.xlf:';
 
+    /**
+     * Eigene Feld-IDs je Task-Typ: Im Formular "Task anlegen" stehen die Felder aller Task-Typen
+     * gleichzeitig im HTML. Gleiche IDs wuerden Labels auf das Feld des anderen Task-Typs zeigen lassen.
+     * Die Feldnamen (tx_scheduler[auto_sync_files_*]) bleiben gleich.
+     */
+    private const ID_PREFIX = 'auto_sync_files_download_';
+
     public function getAdditionalFields(array &$taskInfo, $task, SchedulerModuleController $schedulerModule): array
     {
+        // Nach einem Validierungsfehler zeigt der Scheduler das Formular erneut an: dann die abgeschickten
+        // Werte behalten. Sonst die gespeicherten Werte des Tasks bzw. beim Anlegen die Standardwerte.
+        $storedTask = $task instanceof DownloadTask ? $task : null;
+        $isSubmitted = array_key_exists('auto_sync_files_file_url', $taskInfo);
+
+        $url = $isSubmitted
+            ? trim((string)$taskInfo['auto_sync_files_file_url'])
+            : ($storedTask?->auto_sync_files_file_url ?? '');
+        $localPath = $isSubmitted
+            ? trim((string)($taskInfo['auto_sync_files_local_path'] ?? ''))
+            : ($storedTask?->auto_sync_files_local_path ?? '');
+        $clearCache = $isSubmitted
+            ? isset($taskInfo['auto_sync_files_clear_cache'])
+            : ($storedTask === null || $storedTask->auto_sync_files_clear_cache === 'on');
+
         $additionalFields = [];
 
-        $basePath = Environment::getPublicPath();
-        $placeholderUrl = $this->translate('field.downloadUrl.placeholder.file');
-        $placeholderPath = $basePath . '/fileadmin/Templates/Assets/JavaScript/file.js';
-
         // ── Download URL ─────────────────────────────────────────────────
-        $taskInfo['auto_sync_files_file_url'] = $task instanceof DownloadTask
-            ? $task->auto_sync_files_file_url
-            : ($taskInfo['auto_sync_files_file_url'] ?? '');
-        $additionalFields['auto_sync_files_file_url'] = [
+        $additionalFields[self::ID_PREFIX . 'file_url'] = [
             'code'  => sprintf(
-                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_file_url]" id="auto_sync_files_file_url" placeholder="%s" value="%s" size="30" />',
-                htmlspecialchars($placeholderUrl),
-                htmlspecialchars($taskInfo['auto_sync_files_file_url'])
+                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_file_url]" id="%s" placeholder="%s" value="%s">',
+                self::ID_PREFIX . 'file_url',
+                htmlspecialchars($this->translate('field.downloadUrl.placeholder.file')),
+                htmlspecialchars($url)
             ),
             'label' => self::LL . 'field.downloadUrl.labelWithExample',
+            'type'  => 'input',
         ];
 
         // ── Local Path ───────────────────────────────────────────────────
-        $taskInfo['auto_sync_files_local_path'] = $task instanceof DownloadTask
-            ? $task->auto_sync_files_local_path
-            : ($taskInfo['auto_sync_files_local_path'] ?? '');
-        $additionalFields['auto_sync_files_local_path'] = [
+        $additionalFields[self::ID_PREFIX . 'local_path'] = [
             'code'  => sprintf(
-                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_local_path]" id="auto_sync_files_local_path" placeholder="%s" value="%s" size="30" />',
-                htmlspecialchars($placeholderPath),
-                htmlspecialchars($taskInfo['auto_sync_files_local_path'])
+                '<input class="form-control" type="text" name="tx_scheduler[auto_sync_files_local_path]" id="%s" placeholder="%s" value="%s">',
+                self::ID_PREFIX . 'local_path',
+                htmlspecialchars(Environment::getPublicPath() . '/fileadmin/Templates/Assets/JavaScript/file.js'),
+                htmlspecialchars($localPath)
             ),
             'label' => self::LL . 'field.localPath.label',
+            'type'  => 'input',
         ];
 
         // ── Clear Cache ──────────────────────────────────────────────────
-        $taskInfo['auto_sync_files_clear_cache'] = $task instanceof DownloadTask
-            ? $task->auto_sync_files_clear_cache
-            : ($taskInfo['auto_sync_files_clear_cache'] ?? 'on');
-        $clearCacheChecked = ($taskInfo['auto_sync_files_clear_cache'] === 'on') ? 'checked' : '';
-        $checkboxLabel = $this->translate('field.clearCache.checkbox');
-        $additionalFields['auto_sync_files_clear_cache'] = [
+        $additionalFields[self::ID_PREFIX . 'clear_cache'] = [
             'code'  => sprintf(
-                '<div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="tx_scheduler[auto_sync_files_clear_cache]" id="auto_sync_files_clear_cache" value="on" %s />
-                    <label class="form-check-label" for="auto_sync_files_clear_cache">%s</label>
-                </div>',
-                $clearCacheChecked,
-                htmlspecialchars($checkboxLabel)
+                '<input class="form-check-input" type="checkbox" role="switch" name="tx_scheduler[auto_sync_files_clear_cache]" id="%1$s" value="on"%2$s>'
+                . '<label class="form-check-label" for="%1$s">%3$s</label>',
+                self::ID_PREFIX . 'clear_cache',
+                $clearCache ? ' checked' : '',
+                htmlspecialchars($this->translate('field.clearCache.checkbox'))
             ),
             'label' => self::LL . 'field.clearCache.label',
+            'type'  => 'checkToggle',
         ];
 
         return $additionalFields;
@@ -96,8 +107,10 @@ class DownloadTaskAdditionalFieldProvider extends AbstractAdditionalFieldProvide
     public function saveAdditionalFields(array $submittedData, AbstractTask $task): void
     {
         if ($task instanceof DownloadTask) {
-            $task->auto_sync_files_file_url = (string)$submittedData['auto_sync_files_file_url'];
-            $task->auto_sync_files_local_path = (string)$submittedData['auto_sync_files_local_path'];
+            // Erneut trimmen: Der Scheduler speichert die Werte aus dem Request, nicht die in
+            // validateAdditionalFields() bereinigte Kopie.
+            $task->auto_sync_files_file_url = trim((string)$submittedData['auto_sync_files_file_url']);
+            $task->auto_sync_files_local_path = trim((string)$submittedData['auto_sync_files_local_path']);
             $task->auto_sync_files_clear_cache = isset($submittedData['auto_sync_files_clear_cache'])
                 ? (string)$submittedData['auto_sync_files_clear_cache']
                 : 'off';
