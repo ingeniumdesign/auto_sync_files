@@ -41,7 +41,7 @@
                 <source>Replace target folder completely (contents will be deleted first)</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.enabled">
-                <source>If enabled: All files and subfolders inside the target folder will be deleted BEFORE the archive is extracted.</source>
+                <source>If enabled: All files and subfolders inside the target folder are deleted before the new files are copied in. This only happens after the archive has been extracted successfully.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.disabled">
                 <source>If disabled (default): Merge mode – archive files overwrite same-named entries, additional files in the target folder are kept.</source>
@@ -127,6 +127,9 @@
             </trans-unit>
             <trans-unit id="error.zipOpenFailed">
                 <source>ERROR: Could not open ZIP archive.</source>
+            </trans-unit>
+            <trans-unit id="error.zipExtractFailed">
+                <source>ERROR: Could not extract ZIP archive completely (%s).</source>
             </trans-unit>
             <trans-unit id="error.tarExtractFailed">
                 <source>ERROR: Could not extract TAR archive. %s</source>

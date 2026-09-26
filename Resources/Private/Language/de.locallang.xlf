@@ -52,8 +52,8 @@
                 <target>Zielordner komplett ersetzen (Inhalt wird zuvor gelöscht)</target>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.enabled" approved="yes">
-                <source>If enabled: All files and subfolders inside the target folder will be deleted BEFORE the archive is extracted.</source>
-                <target>Wenn aktiviert: Alle Dateien und Unterordner im Zielordner werden VOR dem Entpacken gelöscht.</target>
+                <source>If enabled: All files and subfolders inside the target folder are deleted before the new files are copied in. This only happens after the archive has been extracted successfully.</source>
+                <target>Wenn aktiviert: Alle Dateien und Unterordner im Zielordner werden gelöscht, bevor die neuen Dateien eingefügt werden. Das passiert erst, wenn das Archiv erfolgreich entpackt wurde.</target>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.disabled" approved="yes">
                 <source>If disabled (default): Merge mode – archive files overwrite same-named entries, additional files in the target folder are kept.</source>
@@ -166,6 +166,10 @@
             <trans-unit id="error.zipOpenFailed" approved="yes">
                 <source>ERROR: Could not open ZIP archive.</source>
                 <target>FEHLER: Konnte ZIP-Archiv nicht öffnen.</target>
+            </trans-unit>
+            <trans-unit id="error.zipExtractFailed" approved="yes">
+                <source>ERROR: Could not extract ZIP archive completely (%s).</source>
+                <target>FEHLER: ZIP-Archiv konnte nicht vollständig entpackt werden (%s).</target>
             </trans-unit>
             <trans-unit id="error.tarExtractFailed" approved="yes">
                 <source>ERROR: Could not extract TAR archive. %s</source>

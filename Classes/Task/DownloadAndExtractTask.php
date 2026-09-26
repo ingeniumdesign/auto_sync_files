@@ -19,7 +19,8 @@ class DownloadAndExtractTask extends AbstractTask
     public string $auto_sync_files_local_path = '';
     public string $auto_sync_files_clear_cache = '';
     /**
-     * Wenn 'on': Zielordner-Inhalt wird VOR dem Entpacken komplett geloescht.
+     * Wenn 'on': Zielordner-Inhalt wird komplett geloescht, sobald das Archiv erfolgreich
+     * entpackt wurde (vor dem Einfuegen der neuen Dateien).
      * Wenn 'off' (oder leer, Default): Merge-Modus.
      */
     public string $auto_sync_files_replace_folder_contents = '';
@@ -111,7 +112,17 @@ class DownloadAndExtractTask extends AbstractTask
                 }
             }
 
-            // 3. Zielverzeichnis vorbereiten (nur loeschen, wenn Replace-Mode aktiv)
+            // 3. In das Temp-Verzeichnis entpacken (mit Zip-Slip-Schutz).
+            //    Der Zielordner wird erst angefasst, wenn das Entpacken vollstaendig geklappt hat:
+            //    ein defektes oder unvollstaendiges Archiv laesst den bisherigen Stand unveraendert.
+            if (!is_dir($tempExtractDir)) {
+                GeneralUtility::mkdir_deep($tempExtractDir);
+            }
+            if (!$this->extractArchive($tempFile, $tempExtractDir)) {
+                return false;
+            }
+
+            // 4. Zielverzeichnis vorbereiten (nur loeschen, wenn Replace-Mode aktiv)
             if (is_dir($this->auto_sync_files_local_path)) {
                 if ($replaceMode) {
                     $this->deleteFolderContents($this->auto_sync_files_local_path);
@@ -123,15 +134,6 @@ class DownloadAndExtractTask extends AbstractTask
                 }
             }
 
-            if (!is_dir($tempExtractDir)) {
-                GeneralUtility::mkdir_deep($tempExtractDir);
-            }
-
-            // 4. Entpacken (mit Zip-Slip-Schutz)
-            if (!$this->extractArchive($tempFile, $tempExtractDir)) {
-                return false;
-            }
-
             // 5. Entpackte Dateien ins Zielverzeichnis bringen
             $movedSuccessfully = $replaceMode
                 ? $this->moveFolderContents($tempExtractDir, $this->auto_sync_files_local_path)
@@ -141,7 +143,8 @@ class DownloadAndExtractTask extends AbstractTask
                 return false;
             }
 
-            // 6. Hash persistieren + Cache leeren
+            // 6. Hash erst nach vollstaendigem Erfolg persistieren (sonst wird der naechste Lauf
+            //    nicht faelschlich uebersprungen), danach Cache leeren
             if ($useHashCache) {
                 $registry->set(self::REGISTRY_NAMESPACE, $registryKey, $newHash);
             }
@@ -231,7 +234,13 @@ class DownloadAndExtractTask extends AbstractTask
             }
         }
 
-        $zip->extractTo($targetDir);
+        // ZipArchive bricht beim ersten fehlerhaften Eintrag mit false ab. Bereits geschriebene
+        // Dateien liegen nur im Temp-Verzeichnis und werden im finally-Block von execute() entfernt.
+        if ($zip->extractTo($targetDir) !== true) {
+            $status = $zip->getStatusString();
+            $zip->close();
+            return $this->logAndReturnFalse('error.zipExtractFailed', [$status]);
+        }
         $zip->close();
         return true;
     }
@@ -264,7 +273,9 @@ class DownloadAndExtractTask extends AbstractTask
                 }
             }
 
-            $phar->extractTo($targetDir, null, true);
+            if ($phar->extractTo($targetDir, null, true) !== true) {
+                return $this->logAndReturnFalse('error.tarExtractFailed', ['PharData::extractTo() returned false']);
+            }
             return true;
         } catch (\Exception $e) {
             return $this->logAndReturnFalse('error.tarExtractFailed', [$e->getMessage()]);
