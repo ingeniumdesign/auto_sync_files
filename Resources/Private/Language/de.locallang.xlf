@@ -60,8 +60,8 @@
                 <target>Wenn deaktiviert (Standard): Merge-Modus – Archiv-Dateien überschreiben gleichnamige Einträge, zusätzliche Dateien im Zielordner bleiben erhalten.</target>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.note" approved="yes">
-                <source>The target folder itself is never deleted.</source>
-                <target>Der Zielordner selbst wird nie gelöscht.</target>
+                <source>The target folder itself is never deleted. Replace mode is not possible for the TYPO3 public directory itself or typo3temp/.</source>
+                <target>Der Zielordner selbst wird nie gelöscht. Für das TYPO3-Public-Verzeichnis selbst und typo3temp/ ist der Ersetzen-Modus nicht möglich.</target>
             </trans-unit>
             <trans-unit id="field.clearCache.label" approved="yes">
                 <source>Clear Cache</source>
@@ -84,6 +84,10 @@
             <trans-unit id="validation.path.required" approved="yes">
                 <source>Local Path is required.</source>
                 <target>Lokaler Pfad ist erforderlich.</target>
+            </trans-unit>
+            <trans-unit id="validation.replaceTargetNotAllowed" approved="yes">
+                <source>Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/. Use Merge mode or a subfolder.</source>
+                <target>Der Ersetzen-Modus ist für das TYPO3-Public-Verzeichnis selbst und typo3temp/ nicht erlaubt. Bitte den Merge-Modus oder einen Unterordner verwenden.</target>
             </trans-unit>
 
             <!-- ────────────── Runtime Error Messages ────────────── -->
@@ -170,6 +174,18 @@
             <trans-unit id="error.zipExtractFailed" approved="yes">
                 <source>ERROR: Could not extract ZIP archive completely (%s).</source>
                 <target>FEHLER: ZIP-Archiv konnte nicht vollständig entpackt werden (%s).</target>
+            </trans-unit>
+            <trans-unit id="error.extractVerifyFailed" approved="yes">
+                <source>ERROR: Extracted file is missing or damaged: %s</source>
+                <target>FEHLER: Entpackte Datei fehlt oder ist beschädigt: %s</target>
+            </trans-unit>
+            <trans-unit id="error.archiveEmpty" approved="yes">
+                <source>ERROR: The archive contains no files.</source>
+                <target>FEHLER: Das Archiv enthält keine Dateien.</target>
+            </trans-unit>
+            <trans-unit id="error.replaceTargetNotAllowed" approved="yes">
+                <source>ERROR: Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/ (it would delete the TYPO3 installation): %s</source>
+                <target>FEHLER: Der Ersetzen-Modus ist für das TYPO3-Public-Verzeichnis selbst und typo3temp/ nicht erlaubt (er würde die TYPO3-Installation löschen): %s</target>
             </trans-unit>
             <trans-unit id="error.tarExtractFailed" approved="yes">
                 <source>ERROR: Could not extract TAR archive. %s</source>

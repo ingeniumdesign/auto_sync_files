@@ -119,6 +119,11 @@ class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFi
         if ($submittedData['auto_sync_files_local_path'] === '') {
             $this->addMessage($this->translate('validation.path.required'), ContextualFeedbackSeverity::ERROR);
             $valid = false;
+        } elseif (($submittedData['auto_sync_files_replace_folder_contents'] ?? '') === 'on'
+            && $this->isProtectedReplaceTarget($submittedData['auto_sync_files_local_path'])
+        ) {
+            $this->addMessage($this->translate('validation.replaceTargetNotAllowed'), ContextualFeedbackSeverity::ERROR);
+            $valid = false;
         }
 
         return $valid;
@@ -151,5 +156,21 @@ class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFi
         }
         $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
         return in_array($scheme, ['http', 'https'], true);
+    }
+
+    /**
+     * Gleiche Regel wie DownloadAndExtractTask::isProtectedReplaceTarget():
+     * Replace-Mode ist fuer den TYPO3-Public-Root selbst und typo3temp/ gesperrt.
+     */
+    private function isProtectedReplaceTarget(string $targetPath): bool
+    {
+        $target = realpath($targetPath);
+        if ($target === false) {
+            return false;
+        }
+        $publicRoot = realpath(Environment::getPublicPath());
+        $tempRoot = realpath(Environment::getPublicPath() . '/typo3temp');
+
+        return $target === $publicRoot || ($tempRoot !== false && $target === $tempRoot);
     }
 }
