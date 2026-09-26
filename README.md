@@ -104,7 +104,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
      - **Unchecked (default):** *Merge mode* — files from the archive overwrite same-named entries in the target folder; additional files already present in the target folder are kept untouched.
      - **Checked:** *Replace mode* — all existing files and subfolders inside the target folder are deleted and replaced by the archive contents, leaving a 1:1 copy of the archive. The deletion only happens after the archive has been extracted successfully; if extraction fails, the target folder is left untouched.
 
-     > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory.
+     > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory. Replace mode is refused for the TYPO3 public directory itself and for `typo3temp/`, because it would delete the TYPO3 installation; Merge mode into the public directory is allowed.
 
    - **Clear Cache:** Tick the checkbox to clear the TYPO3 frontend cache after the update.
 
@@ -116,12 +116,12 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 ## How It Works
 
 - **Download Only Task:**
-  Downloads the specified external file. If a new version is detected (byte-level comparison with the existing local file), it replaces the old file and optionally clears the cache.
+  Downloads the specified external file. If a new version is detected (SHA-256 comparison with the existing local file), it replaces the old file and optionally clears the cache.
 
 - **Download & Extract Task:**
-  Downloads a compressed archive and extracts it into a temporary directory. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
+  Downloads a compressed archive and extracts it into a temporary directory. Every extracted file is verified against the archive (size, and for ZIP also the CRC32 checksum); an empty archive counts as an error. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
 
-**Logging:** Errors during execution are logged via the TYPO3 LogManager and can be reviewed in the standard TYPO3 logging output (configurable in your `LocalConfiguration.php` / `additional.php`).
+**Logging:** Errors during execution are logged via the TYPO3 LogManager. With the default configuration they end up in `var/log/typo3_*.log` (classic mode: `typo3temp/var/log/`). Logging can be configured in `config/system/additional.php` (classic mode: `typo3conf/system/additional.php`).
 
 ---
 
