@@ -9,12 +9,14 @@
 
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Auto Sync Files',
-    'description' => 'Downloads externals files periodically via Scheduler to your Webspace thus you do always have the newest version of a file locally stored. This can be really useful to improve caching performance. Or download a compressed file, unzip the file, delete the existing files.',
+    'description' => 'Downloads external files periodically via the TYPO3 Scheduler into your web space, so you always have the newest version stored locally (e.g. to improve caching). Optional Download & Extract mode: downloads a ZIP / TAR / TAR.GZ archive and merges it into, or replaces, the contents of a target folder.',
     'category' => 'plugin',
     'constraints' => [
         'depends' => [
-            'typo3'     => '12.4.0-12.4.99',
-            'scheduler' => '12.4.0-12.4.99',
+            'typo3'     => '13.4.0-13.4.99',
+            'scheduler' => '13.4.0-13.4.99',
+            'extbase'   => '13.4.0-13.4.99',
+            'php'       => '8.2.0-8.5.99',
         ],
         'conflicts' => [],
         'suggests'  => [],
@@ -28,5 +30,5 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Sebastian Schmal',
     'author_email' => 'info@ingeniumdesign.de',
     'author_company' => 'INGENIUMDESIGN',
-    'version' => '12.0.6',
+    'version' => '13.0.0',
 ];
