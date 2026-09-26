@@ -4,7 +4,7 @@
 
 > Using TYPO3 12.4? Use the **12.0.x** releases of this extension (branch `12.x`).
 
-This extension periodically downloads external files via the TYPO3 Scheduler to your local webspace so that you always have the newest version available. It is especially useful for caching external resources and improving performance. Additionally, the extension offers an optional **Download & Extract** mode which downloads a compressed archive (ZIP, TAR, TAR.GZ) and extracts its contents, replacing existing files.
+This extension periodically downloads external files via the TYPO3 Scheduler to your local webspace so that you always have the newest version available. It is especially useful for caching external resources and improving performance. Additionally, the extension offers an optional **Download & Extract** mode which downloads a compressed archive (ZIP, TAR, TAR.GZ) and extracts it into a target folder, either merging it with the existing files (default) or replacing them.
 
 ---
 
@@ -66,14 +66,14 @@ A classic use case for the Download Only mode is hosting the Google Analytics 4 
 
 1. **Add a new Scheduler Task:**
    In the TYPO3 backend, go to **System > Scheduler** and add a new task.
-   Select **"Auto Sync Files: Download Only"** as the task type.
+   Select **"Auto Sync Files: Download only"** as the task type.
 
 2. **Configure the Task:**
    - **Download URL:** Set this to the URL of the GA4 tag library, including your Measurement ID.
      _Example:_ `https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX`
-   - **Local Path:** Set this to the absolute path where the file should be stored. It must be inside the TYPO3 public directory; the field's placeholder shows the public path of your installation.
+   - **Local path:** Set this to the absolute path where the file should be stored. It must be inside the TYPO3 public directory, and its folder must already exist; the field's placeholder shows the public path of your installation.
      _Example:_ `/var/www/html/public/fileadmin/Templates/Assets/JavaScript/gtag.js`
-   - **Clear Cache:** Tick the checkbox if you want the frontend cache to be cleared when a new version is detected (cache is only cleared if the downloaded file differs from the stored file).
+   - **Clear cache:** Enabled by default. The frontend caches are flushed when a new version is detected (only if the downloaded file differs from the stored file).
 
 3. **Include the Synced File in TypoScript:**
    ```typoscript
@@ -103,26 +103,26 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 
 1. **Add a new Scheduler Task:**
    In the TYPO3 backend, go to **System > Scheduler** and add a new task.
-   Select **"Auto Sync Files: Download & Extract"** as the task type.
+   Select **"Auto Sync Files: Download & extract"** as the task type.
 
 2. **Configure the Task:**
    - **Download URL:** Set this to the URL of the compressed archive (ZIP, TAR, or TAR.GZ).
      _Example:_ `https://example.com/downloads/assets.zip`
-   - **Local Path:** Specify the **absolute path** to the target folder where the archive should be extracted.
+   - **Local path:** Specify the **absolute path** to the target folder where the archive should be extracted.
      _Example:_ `/var/www/html/public/fileadmin/sync/external_assets/`
 
-     > ℹ️ The target folder itself is **never** deleted — only its contents are managed according to the **Replace Mode** option below. If the folder does not exist yet, it will be created on first run.
+     > ℹ️ The target folder itself is **never** deleted — only its contents are managed according to the **Replace mode** option below. If the folder does not exist yet, it will be created on first run; its parent folder must already exist and be writable (e.g. create `fileadmin/sync/` first).
 
-   - **Replace Mode (Zielordner komplett ersetzen):** Controls how the existing contents of the target folder are handled.
-     - **Unchecked (default):** *Merge mode* — files from the archive overwrite same-named entries in the target folder; additional files already present in the target folder are kept untouched.
-     - **Checked:** *Replace mode* — all existing files and subfolders inside the target folder are deleted and replaced by the archive contents, leaving a 1:1 copy of the archive. The deletion only happens after the archive has been extracted successfully; if extraction fails, the target folder is left untouched.
+   - **Replace mode:** Controls how the existing contents of the target folder are handled.
+     - **Off (default):** *Merge mode* — files from the archive overwrite same-named entries in the target folder; additional files already present in the target folder are kept untouched.
+     - **On:** *Replace mode* — all existing files and subfolders inside the target folder are deleted and replaced by the archive contents, leaving a 1:1 copy of the archive. The deletion only happens after the archive has been extracted successfully; if extraction fails, the target folder is left untouched.
 
-     > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory. Replace mode is refused for the TYPO3 public directory itself and for `typo3temp/`, because it would delete the TYPO3 installation; Merge mode into the public directory is allowed.
+     > ⚠️ **Warning (Replace mode):** Any files you may have placed manually in the target folder will be lost on the next run. Always use a dedicated subfolder — never set the local path to the root of `/fileadmin/` or any other critical directory. Replace mode is refused for the TYPO3 public directory itself and for `typo3temp/`; Merge mode into the public directory is allowed.
 
-   - **Clear Cache:** Tick the checkbox to clear the TYPO3 frontend cache after the update.
+   - **Clear cache:** Enabled by default. The frontend caches are flushed after the target folder has been updated.
 
 3. **Result:**
-   On each scheduled run the archive is downloaded, hashed against the last successful run (skipped entirely if unchanged), extracted into a temporary directory, and then either merged into or replacing the contents of the target folder — depending on your Replace Mode setting.
+   On each scheduled run the archive is downloaded, hashed against the last successful run (skipped entirely if unchanged), extracted into a temporary directory, and then either merged into or replacing the contents of the target folder — depending on your Replace mode setting.
 
 ---
 
@@ -132,23 +132,36 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
   Downloads the specified external file. If a new version is detected (SHA-256 comparison with the existing local file), it replaces the old file and optionally clears the cache.
 
 - **Download & Extract Task:**
-  Downloads a compressed archive and extracts it into a temporary directory. Every extracted file is verified against the archive (size, and for ZIP also the CRC32 checksum); an empty archive counts as an error. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
+  Downloads a compressed archive and extracts it into a temporary directory. ZIP files are compared with the size and CRC32 checksum stored in the archive, TAR / TAR.GZ files only with the size in the TAR header; an empty archive counts as an error. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
 
-**Logging:** Errors during execution are logged via the TYPO3 LogManager. With the default configuration they end up in `var/log/typo3_*.log` (classic mode: `typo3temp/var/log/`). Logging can be configured in `config/system/additional.php` (classic mode: `typo3conf/system/additional.php`).
+**Logging:** Errors during execution are logged via the TYPO3 LogManager. With the default configuration they end up in `var/log/typo3_*.log` (classic mode: `typo3temp/var/log/`). Logging can be configured in `config/system/additional.php` (classic mode: `typo3conf/system/additional.php`). The tasks log via the scheduler's log channel `TYPO3\CMS\Scheduler\Task\AbstractTask`, so configure writers under `$GLOBALS['TYPO3_CONF_VARS']['LOG']['TYPO3']['CMS']['Scheduler']` (this also affects other scheduler tasks); a configuration for `ID\AutoSyncFiles` has no effect.
 
 ---
 
 ## Important Notes
 
 - **Data Loss Warning:**
-  When using the Download & Extract mode **with Replace Mode enabled**, the entire contents of the specified local folder will be deleted before the new files are placed. In default Merge mode, only same-named files are overwritten — additional files remain untouched.
-  **Never set the Local Path to the root of critical directories like `/fileadmin/`** — only use dedicated subfolders.
+  When using the Download & Extract mode **with Replace mode enabled**, the entire contents of the specified local folder will be deleted before the new files are placed. In default Merge mode, only same-named files are overwritten — additional files remain untouched.
+  **Never set the local path to the root of critical directories like `/fileadmin/`** — only use dedicated subfolders.
 
 - **Configuration:**
   Both task types are configured via the TYPO3 Scheduler. Ensure you provide a valid URL and an absolute local path.
 
 - **Supported Archive Formats:**
-  ZIP (`.zip`), TAR (`.tar`), and TAR.GZ (`.tar.gz`, `.tgz`).
+  ZIP (`.zip`), TAR (`.tar`), and TAR.GZ (`.tar.gz`, `.tgz`). ZIP is the most reliable format (see "Known Limitations").
+
+---
+
+## Known Limitations
+
+- **TAR / TAR.GZ archives whose paths start with `./`** (e.g. created with `tar czf archive.tgz ./*`) are rejected with "The archive does not contain any files". Versions up to 12.0.6 extracted such archives (archives created from `.`, e.g. `tar czf archive.tgz .`, never worked). Create the archive from inside the folder without the `./` prefix (e.g. `cd folder && tar -czf ../archive.tgz -- *`; `*` does not include hidden files) or use ZIP.
+- **TAR has no checksum per file:** damaged content in a plain `.tar` is not detected, and a TAR that is cut off exactly at a file boundary is accepted with fewer files (this also applies to a cut-off `.tar.gz`; damaged compressed data in a `.tar.gz` is detected). Symbolic and hard links are not supported: they are extracted as empty files or make the extraction fail. For Replace mode, ZIP is the most reliable format.
+- A ZIP archive that contains only folders and no files is not treated as empty. In Replace mode the target folder then only contains these empty folders.
+- On Windows servers, ZIP archives whose folder entries end with `\` (created by old .NET tools) fail the verification.
+- If Replace mode has already emptied the target folder and moving the new files fails (e.g. disk full or missing permissions), the target folder stays empty or partly filled until the next successful run.
+- Replace mode is only refused for the TYPO3 public directory itself and for `typo3temp/`. Other system folders (e.g. `typo3conf/` in classic mode) are not protected; never use them as target folder.
+- Symbolic links in the local path are resolved: the real path must be inside the TYPO3 public directory. Folders that link to a location outside it (e.g. a shared `fileadmin` in deployment setups) cannot be used as target.
+- Download only: if the server answers with status 200 but sends an empty file, the local file is replaced by an empty file.
 
 ---
 
@@ -159,7 +172,10 @@ Version 13.x supports TYPO3 13.4 LTS only. Existing scheduler tasks keep working
 1. Pause the scheduler cron job while you upgrade the TYPO3 core.
 2. Update TYPO3 and this extension in the same step (Composer: `^13.0`; classic mode: install 13.x before the scheduler runs on TYPO3 13.4 for the first time). The scheduler disables tasks whose class cannot be loaded, so the extension must be available before the first scheduler run.
 3. Flush all caches, then check the task list in **System > Scheduler**: all Auto Sync Files tasks should still be enabled.
-4. Tasks created with version 1.0.0 (class `ID\AutoSyncFiles\Task\Task`) cannot be loaded any more and must be created again. Tasks created with 12.0.4 still run but may log PHP deprecation notices; re-creating them is recommended.
+4. If a task shows up as disabled anyway, enable it again; its settings are kept.
+5. Download & Extract tasks created with 12.0.5 or older always replaced the contents of the target folder. Since 12.0.6 these tasks run in Merge mode. If you want the old behaviour, open the task and enable **Replace mode** before its first run after the upgrade (otherwise that run stores the archive hash, and later runs skip the unchanged archive).
+6. Download & Extract tasks that use TAR / TAR.GZ archives with paths starting with `./` fail since 12.0.7; see "Known Limitations".
+7. Tasks created with version 1.0.0 (class `ID\AutoSyncFiles\Task\Task`) cannot be loaded any more and must be created again.
 
 ---
 
