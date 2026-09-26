@@ -128,6 +128,12 @@ class DownloadAndExtractTask extends AbstractTask
                 return false;
             }
 
+            // Ab hier wird das Ziel veraendert: den Hash des letzten Laufs verwerfen. Bricht der Lauf
+            // ab, darf ein spaeterer Lauf mit demselben Archiv nicht uebersprungen werden.
+            if ($useHashCache) {
+                $registry->remove(self::REGISTRY_NAMESPACE, $registryKey);
+            }
+
             // 4. Zielverzeichnis vorbereiten (nur loeschen, wenn Replace-Mode aktiv)
             if (is_dir($this->auto_sync_files_local_path)) {
                 if ($replaceMode) {
@@ -140,12 +146,10 @@ class DownloadAndExtractTask extends AbstractTask
                 }
             }
 
-            // 5. Entpackte Dateien ins Zielverzeichnis bringen
-            $movedSuccessfully = $replaceMode
-                ? $this->moveFolderContents($tempExtractDir, $this->auto_sync_files_local_path)
-                : $this->mergeFolderContents($tempExtractDir, $this->auto_sync_files_local_path);
-
-            if (!$movedSuccessfully) {
+            // 5. Entpackte Dateien ins Zielverzeichnis bringen. Auch im Replace-Mode per Merge (das Ziel
+            //    ist dann leer): Ordner werden angelegt und nur Dateien verschoben. Das klappt auch, wenn
+            //    Zielordner und typo3temp/ auf verschiedenen Dateisystemen liegen.
+            if (!$this->mergeFolderContents($tempExtractDir, $this->auto_sync_files_local_path)) {
                 return false;
             }
 
@@ -264,9 +268,14 @@ class DownloadAndExtractTask extends AbstractTask
         // ZipArchive bricht beim ersten fehlerhaften Eintrag mit false ab. Bereits geschriebene
         // Dateien liegen nur im Temp-Verzeichnis und werden im finally-Block von execute() entfernt.
         if ($zip->extractTo($targetDir) !== true) {
+            // Der ZIP-Status nennt nur Fehler des Archivs selbst. Ist dort nichts gesetzt, lag es an
+            // einem einzelnen Eintrag (Lesen oder Schreiben), und getStatusString() lieferte nur "No error".
+            $archiveError = $zip->status !== \ZipArchive::ER_OK;
             $status = $zip->getStatusString();
             $zip->close();
-            return $this->logAndReturnFalse('error.zipExtractFailed', [$status]);
+            return $archiveError
+                ? $this->logAndReturnFalse('error.zipExtractFailed', [$status])
+                : $this->logAndReturnFalse('error.zipExtractEntryFailed', [$targetDir]);
         }
 
         // Je nach PHP-Version meldet extractTo() beschaedigte Eintraege oder abgebrochene
@@ -396,28 +405,7 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
-     * Verschiebt alle Dateien & Unterordner (Replace-Mode: Ziel ist leer).
-     */
-    private function moveFolderContents(string $source, string $destination): bool
-    {
-        if (!is_dir($source)) {
-            return $this->logAndReturnFalse('error.moveSourceMissing', [$source]);
-        }
-        foreach (scandir($source) as $file) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
-            $srcPath = $source . DIRECTORY_SEPARATOR . $file;
-            $destPath = $destination . DIRECTORY_SEPARATOR . $file;
-            if (!@rename($srcPath, $destPath)) {
-                return $this->logAndReturnFalse('error.renameFailed', [$srcPath, $destPath]);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Rekursive Verschmelzung von $source in $destination (Merge-Mode).
+     * Rekursive Verschmelzung von $source in $destination (Merge- und Replace-Mode).
      */
     private function mergeFolderContents(string $source, string $destination): bool
     {
