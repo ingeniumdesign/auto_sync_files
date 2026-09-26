@@ -1,24 +1,24 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
-    <file source-language="en" datatype="plaintext" original="messages" date="2026-05-16T00:00:00Z" product-name="auto_sync_files">
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="EXT:auto_sync_files/Resources/Private/Language/locallang.xlf" date="2026-09-26T00:00:00Z" product-name="auto_sync_files">
         <header/>
         <body>
 
-            <!-- ────────────── Scheduler Task Titles / Descriptions ────────────── -->
+            <!-- Scheduler task titles and descriptions -->
             <trans-unit id="task.downloadOnly.title">
-                <source>Auto Sync Files: Download Only</source>
+                <source>Auto Sync Files: Download only</source>
             </trans-unit>
             <trans-unit id="task.downloadOnly.description">
-                <source>Download a file from another Webpage periodically to your own Webspace, e.g. the Google-Analytics-Script</source>
+                <source>Periodically downloads a file from an external URL and stores it in your web space, e.g. the Google Analytics script.</source>
             </trans-unit>
             <trans-unit id="task.downloadAndExtract.title">
-                <source>Auto Sync Files: Download &amp; Extract</source>
+                <source>Auto Sync Files: Download &amp; extract</source>
             </trans-unit>
             <trans-unit id="task.downloadAndExtract.description">
-                <source>Download an archive (ZIP, TAR, TAR.GZ), then optionally extract or replace existing files or folders.</source>
+                <source>Periodically downloads an archive (ZIP, TAR, TAR.GZ) and extracts it into a target folder, either in addition to the existing files or as a complete replacement.</source>
             </trans-unit>
 
-            <!-- ────────────── Field Labels ────────────── -->
+            <!-- Form fields -->
             <trans-unit id="field.downloadUrl.label">
                 <source>Download URL</source>
             </trans-unit>
@@ -26,143 +26,140 @@
                 <source>Download URL (e.g. https://example.com/file.txt)</source>
             </trans-unit>
             <trans-unit id="field.downloadUrl.placeholder.file">
-                <source>e.g., https://example.com/file.txt</source>
+                <source>e.g. https://example.com/file.txt</source>
             </trans-unit>
             <trans-unit id="field.downloadUrl.placeholder.archive">
-                <source>e.g., https://example.com/archive.zip</source>
+                <source>e.g. https://example.com/archive.zip</source>
             </trans-unit>
             <trans-unit id="field.localPath.label">
-                <source>Local Path (absolute path inside TYPO3 public root)</source>
+                <source>Local path (absolute path inside the TYPO3 public directory)</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.label">
-                <source>Replace Mode</source>
+                <source>Replace mode</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.checkbox">
-                <source>Replace target folder completely (contents will be deleted first)</source>
+                <source>Replace the contents of the target folder completely (existing files are deleted first)</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.enabled">
-                <source>If enabled: All files and subfolders inside the target folder are deleted before the new files are copied in. This only happens after the archive has been extracted successfully.</source>
+                <source>Enabled: all files and subfolders in the target folder are deleted and replaced by the contents of the archive, but only after the archive has been extracted completely.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.disabled">
-                <source>If disabled (default): Merge mode – archive files overwrite same-named entries, additional files in the target folder are kept.</source>
+                <source>Disabled (default, merge mode): the files from the archive are added to the target folder and overwrite files with the same name. All other files in the target folder are kept.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.note">
-                <source>The target folder itself is never deleted. Replace mode is not possible for the TYPO3 public directory itself or typo3temp/.</source>
+                <source>The target folder itself is never deleted. Replace mode cannot be used for the TYPO3 public directory or for typo3temp/.</source>
             </trans-unit>
             <trans-unit id="field.clearCache.label">
-                <source>Clear Cache</source>
+                <source>Clear cache</source>
             </trans-unit>
             <trans-unit id="field.clearCache.checkbox">
-                <source>Clear Cache after execution if files differ</source>
+                <source>Flush frontend caches when the files have changed</source>
             </trans-unit>
 
-            <!-- ────────────── Validation Messages (Backend Flash) ────────────── -->
+            <!-- Validation messages (backend) -->
             <trans-unit id="validation.url.required">
-                <source>Download URL is required.</source>
+                <source>Please enter a download URL.</source>
             </trans-unit>
             <trans-unit id="validation.url.invalid">
-                <source>Download URL must start with http:// or https://.</source>
+                <source>The download URL must be a valid URL starting with http:// or https://.</source>
             </trans-unit>
             <trans-unit id="validation.path.required">
-                <source>Local Path is required.</source>
+                <source>Please enter a local path.</source>
             </trans-unit>
             <trans-unit id="validation.replaceTargetNotAllowed">
-                <source>Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/. Use Merge mode or a subfolder.</source>
+                <source>Replace mode cannot be used for the TYPO3 public directory or for typo3temp/. Disable replace mode or choose a subfolder.</source>
             </trans-unit>
 
-            <!-- ────────────── Runtime Error Messages (Logs) ────────────── -->
+            <!-- Error messages (log) -->
             <trans-unit id="error.noTargetOrUrl">
-                <source>ERROR: No target path or download URL provided.</source>
+                <source>ERROR: The download URL or the target path is missing.</source>
             </trans-unit>
             <trans-unit id="error.invalidUrl">
-                <source>ERROR: Invalid download URL (only http:// and https:// allowed): %s</source>
+                <source>ERROR: Invalid download URL (only http:// and https:// are allowed): %s</source>
             </trans-unit>
             <trans-unit id="error.pathOutsidePublic">
-                <source>ERROR: Target path must be within TYPO3 public path (%s): %s</source>
+                <source>ERROR: The target path must be inside the TYPO3 public directory (%s), and its parent folder must exist: %s</source>
             </trans-unit>
             <trans-unit id="error.targetIsSymlink">
-                <source>ERROR: Target path is a symlink. Not supported for security reasons: %s</source>
+                <source>ERROR: The target path is a symbolic link, which is not supported for security reasons: %s</source>
             </trans-unit>
             <trans-unit id="error.targetNotWritable">
-                <source>ERROR: No write permissions on existing directory: %s</source>
+                <source>ERROR: The target folder is not writable: %s</source>
             </trans-unit>
             <trans-unit id="error.parentNotWritable">
-                <source>ERROR: Parent directory not writable: %s</source>
+                <source>ERROR: The parent folder does not exist or is not writable: %s</source>
             </trans-unit>
             <trans-unit id="error.httpStatus">
-                <source>ERROR: HTTP Status %d</source>
+                <source>ERROR: The server responded with HTTP status %d.</source>
             </trans-unit>
             <trans-unit id="error.downloadFailed">
-                <source>ERROR: Could not download file. %s</source>
+                <source>ERROR: The download failed: %s</source>
             </trans-unit>
             <trans-unit id="error.tempFileMissing">
-                <source>ERROR: Downloaded file is not present.</source>
+                <source>ERROR: The downloaded file was not found in the temporary folder.</source>
             </trans-unit>
             <trans-unit id="error.tempArchiveMissing">
-                <source>ERROR: Downloaded archive file is not present.</source>
+                <source>ERROR: The downloaded archive was not found in the temporary folder.</source>
             </trans-unit>
             <trans-unit id="error.tempArchiveEmpty">
-                <source>ERROR: Downloaded archive file is empty or not readable.</source>
+                <source>ERROR: The downloaded archive is empty or cannot be read.</source>
             </trans-unit>
             <trans-unit id="error.hashFailed">
-                <source>ERROR: Could not compute SHA-256 hash of the downloaded file.</source>
+                <source>ERROR: Could not calculate the SHA-256 hash of the downloaded file.</source>
             </trans-unit>
             <trans-unit id="error.parentMkdirFailed">
-                <source>ERROR: Could not create parent directory: %s</source>
+                <source>ERROR: Could not create the parent folder: %s</source>
             </trans-unit>
             <trans-unit id="error.targetMkdirFailed">
-                <source>ERROR: Could not create target directory: %s</source>
+                <source>ERROR: Could not create the target folder: %s</source>
             </trans-unit>
             <trans-unit id="error.mergeTargetMkdirFailed">
-                <source>ERROR: Could not create target directory for merge: %s</source>
+                <source>ERROR: Could not create a folder in the target folder: %s</source>
             </trans-unit>
             <trans-unit id="error.writeFailed">
-                <source>ERROR: Could not move/copy downloaded file to %s.</source>
+                <source>ERROR: Could not move or copy the downloaded file to %s.</source>
             </trans-unit>
             <trans-unit id="error.unknownArchiveFormat">
                 <source>ERROR: Unknown archive format.</source>
             </trans-unit>
             <trans-unit id="error.zipExtensionMissing">
-                <source>ERROR: PHP extension 'zip' is not installed.</source>
+                <source>ERROR: The PHP extension "zip" is not installed.</source>
             </trans-unit>
             <trans-unit id="error.pharExtensionMissing">
-                <source>ERROR: PHP extension 'phar' is not available.</source>
+                <source>ERROR: The PHP extension "phar" is not available.</source>
             </trans-unit>
             <trans-unit id="error.zipOpenFailed">
-                <source>ERROR: Could not open ZIP archive.</source>
+                <source>ERROR: Could not open the ZIP archive.</source>
             </trans-unit>
             <trans-unit id="error.zipExtractFailed">
-                <source>ERROR: Could not extract ZIP archive completely (%s).</source>
+                <source>ERROR: Could not extract the ZIP archive completely (%s).</source>
+            </trans-unit>
+            <trans-unit id="error.zipExtractEntryFailed">
+                <source>ERROR: Could not extract the ZIP archive completely: a file could not be read from the archive or could not be written to %s.</source>
             </trans-unit>
             <trans-unit id="error.extractVerifyFailed">
-                <source>ERROR: Extracted file is missing or damaged: %s</source>
+                <source>ERROR: An extracted file is missing or damaged: %s</source>
             </trans-unit>
             <trans-unit id="error.archiveEmpty">
-                <source>ERROR: The archive contains no files.</source>
+                <source>ERROR: The archive does not contain any files.</source>
             </trans-unit>
             <trans-unit id="error.replaceTargetNotAllowed">
-                <source>ERROR: Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/ (it would delete the TYPO3 installation): %s</source>
+                <source>ERROR: Replace mode cannot be used for the TYPO3 public directory or for typo3temp/: %s</source>
             </trans-unit>
             <trans-unit id="error.tarExtractFailed">
-                <source>ERROR: Could not extract TAR archive. %s</source>
+                <source>ERROR: Could not extract the TAR archive: %s</source>
             </trans-unit>
             <trans-unit id="error.zipSlipZip">
-                <source>ERROR: Unsafe path in ZIP archive rejected (Zip-Slip): %s</source>
+                <source>ERROR: Unsafe path in the ZIP archive rejected (Zip Slip): %s</source>
             </trans-unit>
             <trans-unit id="error.zipSlipTar">
-                <source>ERROR: Unsafe path in TAR archive rejected (Zip-Slip): %s</source>
-            </trans-unit>
-            <trans-unit id="error.moveSourceMissing">
-                <source>ERROR: Source directory for move does not exist: %s</source>
+                <source>ERROR: Unsafe path in the TAR archive rejected (Zip Slip): %s</source>
             </trans-unit>
             <trans-unit id="error.mergeSourceMissing">
-                <source>ERROR: Source directory for merge does not exist: %s</source>
-            </trans-unit>
-            <trans-unit id="error.renameFailed">
-                <source>ERROR: Could not move file: %s -&gt; %s</source>
+                <source>ERROR: The temporary folder with the extracted files does not exist: %s</source>
             </trans-unit>
             <trans-unit id="error.renameFailedMerge">
-                <source>ERROR: Could not move file (merge): %s -&gt; %s</source>
+                <source>ERROR: Could not move the file into the target folder: %s -&gt; %s</source>
             </trans-unit>
 
         </body>
