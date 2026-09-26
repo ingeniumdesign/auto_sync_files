@@ -13,9 +13,9 @@ $EM_CONF[$_EXTKEY] = [
     'category' => 'plugin',
     'constraints' => [
         'depends' => [
-            'typo3'     => '13.4.0-13.4.99',
-            'scheduler' => '13.4.0-13.4.99',
-            'extbase'   => '13.4.0-13.4.99',
+            'typo3'     => '13.4.0-14.3.99',
+            'scheduler' => '13.4.0-14.3.99',
+            'extbase'   => '13.4.0-14.3.99',
             'php'       => '8.2.0-8.99.99',
         ],
         'conflicts' => [],
@@ -30,5 +30,5 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Sebastian Schmal',
     'author_email' => 'info@ingeniumdesign.de',
     'author_company' => 'INGENIUMDESIGN',
-    'version' => '13.0.1',
+    'version' => '14.0.0',
 ];
