@@ -24,19 +24,13 @@ This extension periodically downloads external files via the TYPO3 Scheduler to 
 
 ### Via Composer
 
-The package is not published on Packagist yet. Add the GitHub repository to the `repositories` section of your project's `composer.json` first:
-
-```json
-"repositories": [
-    { "type": "vcs", "url": "https://github.com/ingeniumdesign/auto_sync_files" }
-]
-```
-
-Then require the extension:
+The package is available on [Packagist](https://packagist.org/packages/ingeniumdesign/auto-sync-files):
 
 ```bash
 composer require ingeniumdesign/auto-sync-files:^13.0
 ```
+
+For TYPO3 12.4 use `^12.0`.
 
 ### Classic mode (without Composer)
 

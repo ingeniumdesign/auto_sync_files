@@ -5,6 +5,11 @@ All notable changes to this extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The major version follows the supported TYPO3 version: **13.x = TYPO3 13.4 LTS**, 12.0.x = TYPO3 12.4, 1.0.0 = TYPO3 8.7.
 
+## [Unreleased]
+
+### Documentation
+- README: Composer installation via [Packagist](https://packagist.org/packages/ingeniumdesign/auto-sync-files); the GitHub VCS repository entry is no longer needed.
+
 ## [13.0.0] - 2026-09-26
 
 TYPO3 13.4 LTS support ([#5]). TYPO3 12.4 installations use the 12.0.x releases (last release: [12.0.7]).
@@ -108,6 +113,7 @@ TYPO3 12.4 support ([#3]) and the new Download & Extract task ([#2]).
 
 Initial release for TYPO3 8.7: a scheduler task that periodically downloads a file into the local web space (published in the TER). Includes the fix for tasks failing on some servers and the TYPO3 base-path helper in the task form.
 
+[Unreleased]: https://github.com/ingeniumdesign/auto_sync_files/compare/13.0.0...master
 [13.0.0]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/13.0.0
 [12.0.7]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/12.0.7
 [12.0.6]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/12.0.6
