@@ -6,6 +6,7 @@ namespace ID\AutoSyncFiles\Task;
 
 use TYPO3\CMS\Scheduler\AbstractAdditionalFieldProvider;
 use TYPO3\CMS\Scheduler\Controller\SchedulerModuleController;
+use TYPO3\CMS\Scheduler\SchedulerManagementAction;
 use TYPO3\CMS\Scheduler\Task\AbstractTask;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
@@ -24,9 +25,12 @@ class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFi
 
     public function getAdditionalFields(array &$taskInfo, $task, SchedulerModuleController $schedulerModule): array
     {
-        // Nach einem Validierungsfehler zeigt der Scheduler das Formular erneut an: dann die abgeschickten
-        // Werte behalten. Sonst die gespeicherten Werte des Tasks bzw. beim Anlegen die Standardwerte.
-        $storedTask = $task instanceof DownloadAndExtractTask ? $task : null;
+        // $taskInfo enthaelt in TYPO3 13.4 nach einem Validierungsfehler die abgeschickten Werte und in
+        // TYPO3 14.3 beim Bearbeiten die gespeicherten Werte (Schalter dann 'on' oder 'off'). Sonst gelten die
+        // Werte des gespeicherten Tasks bzw. beim Anlegen die Standardwerte. TYPO3 14.3 uebergibt auch beim
+        // Anlegen ein leeres Task-Objekt, deshalb entscheidet die aktuelle Aktion.
+        $isNewTask = $schedulerModule->getCurrentAction() === SchedulerManagementAction::ADD;
+        $storedTask = !$isNewTask && $task instanceof DownloadAndExtractTask ? $task : null;
         $isSubmitted = array_key_exists('auto_sync_files_file_url', $taskInfo);
 
         $url = $isSubmitted
@@ -36,10 +40,10 @@ class DownloadAndExtractTaskAdditionalFieldProvider extends AbstractAdditionalFi
             ? trim((string)($taskInfo['auto_sync_files_local_path'] ?? ''))
             : ($storedTask?->auto_sync_files_local_path ?? '');
         $replaceMode = $isSubmitted
-            ? isset($taskInfo['auto_sync_files_replace_folder_contents'])
+            ? ($taskInfo['auto_sync_files_replace_folder_contents'] ?? '') === 'on'
             : $storedTask?->auto_sync_files_replace_folder_contents === 'on';
         $clearCache = $isSubmitted
-            ? isset($taskInfo['auto_sync_files_clear_cache'])
+            ? ($taskInfo['auto_sync_files_clear_cache'] ?? '') === 'on'
             : ($storedTask === null || $storedTask->auto_sync_files_clear_cache === 'on');
 
         $additionalFields = [];
