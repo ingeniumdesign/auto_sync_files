@@ -47,7 +47,7 @@
                 <source>If disabled (default): Merge mode – archive files overwrite same-named entries, additional files in the target folder are kept.</source>
             </trans-unit>
             <trans-unit id="field.replaceMode.help.note">
-                <source>The target folder itself is never deleted.</source>
+                <source>The target folder itself is never deleted. Replace mode is not possible for the TYPO3 public directory itself or typo3temp/.</source>
             </trans-unit>
             <trans-unit id="field.clearCache.label">
                 <source>Clear Cache</source>
@@ -65,6 +65,9 @@
             </trans-unit>
             <trans-unit id="validation.path.required">
                 <source>Local Path is required.</source>
+            </trans-unit>
+            <trans-unit id="validation.replaceTargetNotAllowed">
+                <source>Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/. Use Merge mode or a subfolder.</source>
             </trans-unit>
 
             <!-- ────────────── Runtime Error Messages (Logs) ────────────── -->
@@ -130,6 +133,15 @@
             </trans-unit>
             <trans-unit id="error.zipExtractFailed">
                 <source>ERROR: Could not extract ZIP archive completely (%s).</source>
+            </trans-unit>
+            <trans-unit id="error.extractVerifyFailed">
+                <source>ERROR: Extracted file is missing or damaged: %s</source>
+            </trans-unit>
+            <trans-unit id="error.archiveEmpty">
+                <source>ERROR: The archive contains no files.</source>
+            </trans-unit>
+            <trans-unit id="error.replaceTargetNotAllowed">
+                <source>ERROR: Replace mode is not allowed for the TYPO3 public directory itself or typo3temp/ (it would delete the TYPO3 installation): %s</source>
             </trans-unit>
             <trans-unit id="error.tarExtractFailed">
                 <source>ERROR: Could not extract TAR archive. %s</source>

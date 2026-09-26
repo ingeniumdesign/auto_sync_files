@@ -67,6 +67,12 @@ class DownloadAndExtractTask extends AbstractTask
 
         $replaceMode = $this->auto_sync_files_replace_folder_contents === 'on';
 
+        // Replace-Mode darf weder den Webroot selbst noch typo3temp/ leeren: das wuerde die
+        // TYPO3-Installation bzw. das eigene Arbeitsverzeichnis loeschen. Merge in den Webroot bleibt erlaubt.
+        if ($replaceMode && $this->isProtectedReplaceTarget($this->auto_sync_files_local_path)) {
+            return $this->logAndReturnFalse('error.replaceTargetNotAllowed', [$this->auto_sync_files_local_path]);
+        }
+
         try {
             // 1. Streaming-Download direkt in Temp-Datei
             try {
@@ -168,6 +174,22 @@ class DownloadAndExtractTask extends AbstractTask
     }
 
     /**
+     * Ziele, fuer die der Replace-Mode gesperrt ist: der TYPO3-Public-Root selbst und typo3temp/.
+     * Existiert der Zielordner noch nicht, kann er keines von beiden sein.
+     */
+    private function isProtectedReplaceTarget(string $targetPath): bool
+    {
+        $target = realpath($targetPath);
+        if ($target === false) {
+            return false;
+        }
+        $publicRoot = realpath(Environment::getPublicPath());
+        $tempRoot = realpath(Environment::getPublicPath() . '/typo3temp');
+
+        return $target === $publicRoot || ($tempRoot !== false && $target === $tempRoot);
+    }
+
+    /**
      * Prueft, ob ein Verzeichnis leer ist (nur '.' und '..' enthaelt).
      */
     private function isFolderEmpty(string $folder): bool
@@ -224,6 +246,11 @@ class DownloadAndExtractTask extends AbstractTask
             return $this->logAndReturnFalse('error.zipOpenFailed');
         }
 
+        if ($zip->numFiles === 0) {
+            $zip->close();
+            return $this->logAndReturnFalse('error.archiveEmpty');
+        }
+
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = (string)$zip->getNameIndex($i);
             if (!$this->isSafeArchivePath($name)) {
@@ -241,6 +268,31 @@ class DownloadAndExtractTask extends AbstractTask
             $zip->close();
             return $this->logAndReturnFalse('error.zipExtractFailed', [$status]);
         }
+
+        // Je nach PHP-Version meldet extractTo() beschaedigte Eintraege oder abgebrochene
+        // Schreibvorgaenge nicht (u. a. PHP 8.2 und 8.3). Deshalb jede entpackte Datei gegen
+        // Groesse und CRC32 aus dem Archiv pruefen.
+        $baseDir = rtrim($targetDir, '/\\') . '/';
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            if ($stat === false) {
+                $zip->close();
+                return $this->logAndReturnFalse('error.extractVerifyFailed', ['#' . $i]);
+            }
+            $name = (string)$stat['name'];
+            if (str_ends_with($name, '/')) {
+                continue;
+            }
+            $file = $baseDir . $name;
+            if (!is_file($file)
+                || filesize($file) !== (int)$stat['size']
+                || hash_file('crc32b', $file) !== sprintf('%08x', ((int)$stat['crc']) & 0xFFFFFFFF)
+            ) {
+                $zip->close();
+                return $this->logAndReturnFalse('error.extractVerifyFailed', [$name]);
+            }
+        }
+
         $zip->close();
         return true;
     }
@@ -266,15 +318,30 @@ class DownloadAndExtractTask extends AbstractTask
                     \FilesystemIterator::SKIP_DOTS
                 )
             );
+            $expectedSizes = [];
             foreach ($iterator as $entry) {
                 $relPath = substr((string)$entry->getPathname(), strlen($pharPrefix));
                 if (!$this->isSafeArchivePath($relPath)) {
                     return $this->logAndReturnFalse('error.zipSlipTar', [$relPath]);
                 }
+                if ($entry->isFile()) {
+                    $expectedSizes[$relPath] = $entry->getSize();
+                }
+            }
+            if ($expectedSizes === []) {
+                return $this->logAndReturnFalse('error.archiveEmpty');
             }
 
-            if ($phar->extractTo($targetDir, null, true) !== true) {
-                return $this->logAndReturnFalse('error.tarExtractFailed', ['PharData::extractTo() returned false']);
+            // PharData::extractTo() wirft bei Fehlern eine Exception (siehe catch unten)
+            $phar->extractTo($targetDir, null, true);
+
+            // Jede entpackte Datei gegen die Groesse im Archiv pruefen
+            $baseDir = rtrim($targetDir, '/\\') . '/';
+            foreach ($expectedSizes as $relPath => $size) {
+                $file = $baseDir . $relPath;
+                if (!is_file($file) || ($size !== false && filesize($file) !== $size)) {
+                    return $this->logAndReturnFalse('error.extractVerifyFailed', [$relPath]);
+                }
             }
             return true;
         } catch (\Exception $e) {
