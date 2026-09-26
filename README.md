@@ -1,8 +1,12 @@
 # Auto Sync Files
 
-**TYPO3 13.4 LTS – Auto Sync Files Extension**
+**TYPO3 13.4 LTS and 14.3 LTS – Auto Sync Files Extension**
 
-> Using TYPO3 12.4? Use the **12.0.x** releases of this extension (branch `12.x`).
+| Extension | TYPO3 | PHP | Status |
+|---|---|---|---|
+| 14.x | 13.4, 14.3 | 8.2 – 8.5 | current |
+| 13.0.x | 13.4 | 8.2 – 8.5 | replaced by 14.x |
+| 12.0.x | 12.4 | 8.1+ | no longer maintained (branch `12.x`) |
 
 This extension periodically downloads external files via the TYPO3 Scheduler to your local webspace so that you always have the newest version available. It is especially useful for caching external resources and improving performance. Additionally, the extension offers an optional **Download & Extract** mode which downloads a compressed archive (ZIP, TAR, TAR.GZ) and extracts it into a target folder, either merging it with the existing files (default) or replacing them.
 
@@ -10,7 +14,7 @@ This extension periodically downloads external files via the TYPO3 Scheduler to 
 
 ## Requirements
 
-- **TYPO3:** 13.4 LTS (for TYPO3 12.4 use the 12.0.x releases)
+- **TYPO3:** 13.4 LTS or 14.3 LTS (for TYPO3 12.4 use the 12.0.x releases)
 - **PHP:** 8.2 – 8.5
 - **TYPO3 System Extensions:** `scheduler`, `extbase`
 - **PHP Extensions:**
@@ -27,10 +31,10 @@ This extension periodically downloads external files via the TYPO3 Scheduler to 
 The package is available on [Packagist](https://packagist.org/packages/ingeniumdesign/auto-sync-files):
 
 ```bash
-composer require ingeniumdesign/auto-sync-files:^13.0
+composer require ingeniumdesign/auto-sync-files:^14.0
 ```
 
-For TYPO3 12.4 use `^12.0`.
+Version 14.x works with TYPO3 13.4 and 14.3. For TYPO3 12.4 use `^12.0`.
 
 ### Classic mode (without Composer)
 
@@ -128,7 +132,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 - **Download & Extract Task:**
   Downloads a compressed archive and extracts it into a temporary directory. ZIP files are compared with the size and CRC32 checksum stored in the archive, TAR / TAR.GZ files only with the size in the TAR header; an empty archive counts as an error. Only if the extraction succeeded completely is the target folder updated: in Replace mode its current contents are deleted first, in Merge mode (default) the extracted files are merged in. The archive hash is stored only after a fully successful run, so a failed run is retried on the next execution.
 
-**Logging:** Errors during execution are logged via the TYPO3 LogManager. With the default configuration they end up in `var/log/typo3_*.log` (classic mode: `typo3temp/var/log/`). Logging can be configured in `config/system/additional.php` (classic mode: `typo3conf/system/additional.php`). The tasks log via the scheduler's log channel `TYPO3\CMS\Scheduler\Task\AbstractTask`, so configure writers under `$GLOBALS['TYPO3_CONF_VARS']['LOG']['TYPO3']['CMS']['Scheduler']` (this also affects other scheduler tasks); a configuration for `ID\AutoSyncFiles` has no effect.
+**Logging:** Errors during execution are logged via the TYPO3 LogManager. With the default configuration they end up in `var/log/typo3_*.log` (classic mode: `typo3temp/var/log/`). Logging can be configured in `config/system/additional.php` (classic mode: `typo3conf/system/additional.php`). The log channel depends on the TYPO3 version: on TYPO3 13.4 the tasks log via the scheduler's channel `TYPO3\CMS\Scheduler\Task\AbstractTask`, so configure writers under `$GLOBALS['TYPO3_CONF_VARS']['LOG']['TYPO3']['CMS']['Scheduler']` (this also affects other scheduler tasks); on TYPO3 14.3 they log via their own class names, so a configuration under `$GLOBALS['TYPO3_CONF_VARS']['LOG']['ID']['AutoSyncFiles']` works there.
 
 ---
 
@@ -156,15 +160,29 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 - Replace mode is only refused for the TYPO3 public directory itself and for `typo3temp/`. Other system folders (e.g. `typo3conf/` in classic mode) are not protected; never use them as target folder.
 - Symbolic links in the local path are resolved: the real path must be inside the TYPO3 public directory. Folders that link to a location outside it (e.g. a shared `fileadmin` in deployment setups) cannot be used as target.
 - Download only: if the server answers with status 200 but sends an empty file, the local file is replaced by an empty file.
+- TYPO3 14.3: the tasks are still registered the classic way (`SC_OPTIONS` and additional field providers). This works, but TYPO3 14 logs a deprecation message whenever a task form is opened or saved. TYPO3 v15 will need native TCA task types ([#7](https://github.com/ingeniumdesign/auto_sync_files/issues/7)).
+
+---
+
+## Upgrading from TYPO3 13.4 to 14.3
+
+Version 14.x supports both TYPO3 versions, so the extension can stay the same while you upgrade the core. TYPO3 14 stores scheduler tasks in a new format; an upgrade wizard converts existing tasks. Task UIDs and settings are kept.
+
+1. On TYPO3 13.4, update this extension to 14.x first (Composer: `^14.0`).
+2. Pause the scheduler cron job.
+3. Upgrade the TYPO3 core to 14.3 and run the database compare.
+4. Run the upgrade wizard "Migrate the contents of the tx_scheduler_task database table into a more structured form." (identifier `schedulerDatabaseStorageMigration`) in **Admin Tools > Upgrade**, or `vendor/bin/typo3 upgrade:run schedulerDatabaseStorageMigration`.
+5. Check the task list in **System > Scheduler**. Tasks that were due while the wizard had not run yet are disabled by TYPO3; enable them again, their settings are kept.
+6. Start the scheduler cron job again.
 
 ---
 
 ## Upgrading from TYPO3 12.4 (extension 12.0.x)
 
-Version 13.x supports TYPO3 13.4 LTS only. Existing scheduler tasks keep working: task classes and their settings are unchanged.
+Version 14.x supports TYPO3 13.4 and 14.3; upgrade from TYPO3 12.4 to 13.4 first. Existing scheduler tasks keep working: task classes and their settings are unchanged.
 
 1. Pause the scheduler cron job while you upgrade the TYPO3 core.
-2. Update TYPO3 and this extension in the same step (Composer: `^13.0`; classic mode: install 13.x before the scheduler runs on TYPO3 13.4 for the first time). The scheduler disables tasks whose class cannot be loaded, so the extension must be available before the first scheduler run.
+2. Update TYPO3 and this extension in the same step (Composer: `^14.0`; classic mode: install 14.x before the scheduler runs on TYPO3 13.4 for the first time). The scheduler disables tasks whose class cannot be loaded, so the extension must be available before the first scheduler run.
 3. Flush all caches, then check the task list in **System > Scheduler**: all Auto Sync Files tasks should still be enabled.
 4. If a task shows up as disabled anyway, enable it again; its settings are kept.
 5. Download & Extract tasks created with 12.0.5 or older always replaced the contents of the target folder. Since 12.0.6 these tasks run in Merge mode. If you want the old behaviour, open the task and enable **Replace mode** before its first run after the upgrade (otherwise that run stores the archive hash, and later runs skip the unchanged archive).

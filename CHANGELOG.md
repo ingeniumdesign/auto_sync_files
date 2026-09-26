@@ -5,6 +5,25 @@ All notable changes to this extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The major version follows the supported TYPO3 version: **13.x = TYPO3 13.4 LTS**, 12.0.x = TYPO3 12.4, 1.0.0 = TYPO3 8.7.
 
+## [14.0.0] - 2026-09-26
+
+TYPO3 14.3 LTS support ([#6]). Version 14.x supports **TYPO3 13.4 and 14.3** with the same code; the code for TYPO3 13.4 is unchanged.
+
+### Added
+- TYPO3 14.3 LTS support. The tasks keep the classic registration (`SC_OPTIONS` and additional field providers); on TYPO3 14.3 this works, but TYPO3 logs a deprecation message when a task form is opened or saved. Native TCA task types follow before TYPO3 v15 ([#7]).
+
+### Changed
+- Constraints: TYPO3 `^13.4 || ^14.3` (`composer.json`) and `13.4.0-14.3.99` (`ext_emconf.php`); PHP stays 8.2 or newer (TYPO3 13.4 and 14.3 both support PHP 8.2 – 8.5).
+- `composer.json` declares the extension version and `providesPackages`, so TYPO3 14 no longer needs `ext_emconf.php`; the description starts with the title "Auto Sync Files".
+
+### Fixed
+- Task forms on TYPO3 14.3: switches showed "on" when an existing task was edited, because TYPO3 14 passes the stored values ('on' / 'off') to the form. Saving such a task unchanged would have enabled Replace mode.
+- Task forms on TYPO3 14.3: new tasks start with "Clear cache" enabled, as on TYPO3 13.4.
+
+### Upgrade notes
+- TYPO3 13.4 installations can update from 13.0.x without further steps.
+- Upgrading the core from 13.4 to 14.3: update the extension to 14.x first, then run the TYPO3 upgrade wizard `schedulerDatabaseStorageMigration`. Details: README, section "Upgrading from TYPO3 13.4 to 14.3".
+
 ## [13.0.1] - 2026-09-26
 
 Documentation release; the code is unchanged since 13.0.0.
@@ -115,6 +134,7 @@ TYPO3 12.4 support ([#3]) and the new Download & Extract task ([#2]).
 
 Initial release for TYPO3 8.7: a scheduler task that periodically downloads a file into the local web space (published in the TER). Includes the fix for tasks failing on some servers and the TYPO3 base-path helper in the task form.
 
+[14.0.0]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/14.0.0
 [13.0.1]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/13.0.1
 [13.0.0]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/13.0.0
 [12.0.7]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/12.0.7
@@ -128,3 +148,5 @@ Initial release for TYPO3 8.7: a scheduler task that periodically downloads a fi
 [#3]: https://github.com/ingeniumdesign/auto_sync_files/issues/3
 [#4]: https://github.com/ingeniumdesign/auto_sync_files/issues/4
 [#5]: https://github.com/ingeniumdesign/auto_sync_files/issues/5
+[#6]: https://github.com/ingeniumdesign/auto_sync_files/issues/6
+[#7]: https://github.com/ingeniumdesign/auto_sync_files/issues/7
