@@ -34,9 +34,15 @@ The package is available on [Packagist](https://packagist.org/packages/id/auto-s
 composer require id/auto-sync-files:^14.0
 ```
 
-> Up to version 14.0.0 the Composer package was named `ingeniumdesign/auto-sync-files`. To switch, run `composer remove ingeniumdesign/auto-sync-files` and `composer require id/auto-sync-files:^14.0`. The extension key `auto_sync_files`, the scheduler tasks and their settings stay the same.
+Version 14.x works with TYPO3 13.4 and 14.3. For TYPO3 12.4 use `composer require id/auto-sync-files:^12.0`.
 
-Version 14.x works with TYPO3 13.4 and 14.3. For TYPO3 12.4 use `^12.0`.
+> **Package renamed:** up to version 14.0.0 the Composer package was named `ingeniumdesign/auto-sync-files`. That name is no longer available on Packagist; all versions (including 12.0.x and 13.0.x) are available as `id/auto-sync-files`. To switch:
+>
+> 1. Pause the scheduler cron job (while the extension is not installed, TYPO3 disables due tasks of this extension).
+> 2. Run `composer remove ingeniumdesign/auto-sync-files` and `composer require id/auto-sync-files:^14.0`.
+> 3. Start the cron job again.
+>
+> The extension key `auto_sync_files`, the scheduler tasks and their settings stay the same.
 
 ### Classic mode (without Composer)
 
@@ -170,7 +176,7 @@ A common use case is to keep a folder in your TYPO3 project in sync with a remot
 
 Version 14.x supports both TYPO3 versions, so the extension can stay the same while you upgrade the core. TYPO3 14 stores scheduler tasks in a new format; an upgrade wizard converts existing tasks. Task UIDs and settings are kept.
 
-1. On TYPO3 13.4, update this extension to 14.x first (Composer: `^14.0`).
+1. On TYPO3 13.4, update this extension to 14.x first (Composer: `id/auto-sync-files:^14.0`).
 2. Pause the scheduler cron job.
 3. Upgrade the TYPO3 core to 14.3 and run the database compare.
 4. Run the upgrade wizard "Migrate the contents of the tx_scheduler_task database table into a more structured form." (identifier `schedulerDatabaseStorageMigration`) in **Admin Tools > Upgrade**, or `vendor/bin/typo3 upgrade:run schedulerDatabaseStorageMigration`.
@@ -184,7 +190,7 @@ Version 14.x supports both TYPO3 versions, so the extension can stay the same wh
 Version 14.x supports TYPO3 13.4 and 14.3; upgrade from TYPO3 12.4 to 13.4 first. Existing scheduler tasks keep working: task classes and their settings are unchanged.
 
 1. Pause the scheduler cron job while you upgrade the TYPO3 core.
-2. Update TYPO3 and this extension in the same step (Composer: `^14.0`; classic mode: install 14.x before the scheduler runs on TYPO3 13.4 for the first time). The scheduler disables tasks whose class cannot be loaded, so the extension must be available before the first scheduler run.
+2. Update TYPO3 and this extension in the same step (Composer: `id/auto-sync-files:^14.0`, see "Package renamed" above if your project still uses the old package name; classic mode: install 14.x before the scheduler runs on TYPO3 13.4 for the first time). The scheduler disables tasks whose class cannot be loaded, so the extension must be available before the first scheduler run.
 3. Flush all caches, then check the task list in **System > Scheduler**: all Auto Sync Files tasks should still be enabled.
 4. If a task shows up as disabled anyway, enable it again; its settings are kept.
 5. Download & Extract tasks created with 12.0.5 or older always replaced the contents of the target folder. Since 12.0.6 these tasks run in Merge mode. If you want the old behaviour, open the task and enable **Replace mode** before its first run after the upgrade (otherwise that run stores the archive hash, and later runs skip the unchanged archive).
