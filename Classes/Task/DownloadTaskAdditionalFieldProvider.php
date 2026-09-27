@@ -90,17 +90,22 @@ class DownloadTaskAdditionalFieldProvider extends AbstractAdditionalFieldProvide
         $submittedData['auto_sync_files_file_url'] = trim($submittedData['auto_sync_files_file_url'] ?? '');
         $submittedData['auto_sync_files_local_path'] = trim($submittedData['auto_sync_files_local_path'] ?? '');
 
+        // addMessage() ist die Methode von AbstractAdditionalFieldProvider. Der Extension Scanner verwechselt sie
+        // mit dem laengst entfernten SchedulerModuleController::addMessage(), daher die Scanner-Markierung unten.
         $valid = true;
 
         if ($submittedData['auto_sync_files_file_url'] === '') {
+            // @extensionScannerIgnoreLine
             $this->addMessage($this->translate('validation.url.required'), ContextualFeedbackSeverity::ERROR);
             $valid = false;
         } elseif (!$this->isValidDownloadUrl($submittedData['auto_sync_files_file_url'])) {
+            // @extensionScannerIgnoreLine
             $this->addMessage($this->translate('validation.url.invalid'), ContextualFeedbackSeverity::ERROR);
             $valid = false;
         }
 
         if ($submittedData['auto_sync_files_local_path'] === '') {
+            // @extensionScannerIgnoreLine
             $this->addMessage($this->translate('validation.path.required'), ContextualFeedbackSeverity::ERROR);
             $valid = false;
         }

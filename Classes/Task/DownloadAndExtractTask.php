@@ -334,6 +334,8 @@ class DownloadAndExtractTask extends AbstractTask
                     return $this->logAndReturnFalse('error.zipSlipTar', [$relPath]);
                 }
                 if ($entry->isFile()) {
+                    // SplFileInfo::getSize() von PHP; der Extension Scanner verwechselt es mit einer Core-Methode
+                    // @extensionScannerIgnoreLine
                     $expectedSizes[$relPath] = $entry->getSize();
                 }
             }
