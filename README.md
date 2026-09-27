@@ -28,11 +28,13 @@ This extension periodically downloads external files via the TYPO3 Scheduler to 
 
 ### Via Composer
 
-The package is available on [Packagist](https://packagist.org/packages/ingeniumdesign/auto-sync-files):
+The package is available on [Packagist](https://packagist.org/packages/id/auto-sync-files):
 
 ```bash
-composer require ingeniumdesign/auto-sync-files:^14.0
+composer require id/auto-sync-files:^14.0
 ```
+
+> Up to version 14.0.0 the Composer package was named `ingeniumdesign/auto-sync-files`. To switch, run `composer remove ingeniumdesign/auto-sync-files` and `composer require id/auto-sync-files:^14.0`. The extension key `auto_sync_files`, the scheduler tasks and their settings stay the same.
 
 Version 14.x works with TYPO3 13.4 and 14.3. For TYPO3 12.4 use `^12.0`.
 

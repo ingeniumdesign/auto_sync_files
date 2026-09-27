@@ -1,5 +1,5 @@
 {
-    "name": "ingeniumdesign/auto-sync-files",
+    "name": "id/auto-sync-files",
     "type": "typo3-cms-extension",
     "description": "Auto Sync Files - Downloads external files periodically via TYPO3 Scheduler. Two modes: single file download (e.g. Google Analytics) or compressed archive download with extraction (ZIP, TAR, TAR.GZ).",
     "keywords": ["typo3", "scheduler", "sync", "download", "extract", "zip", "tar"],
@@ -28,6 +28,9 @@
     "suggest": {
         "ext-zlib": "Required to extract .tar.gz / .tgz archives"
     },
+    "replace": {
+        "ingeniumdesign/auto-sync-files": "self.version"
+    },
     "autoload": {
         "psr-4": {
             "ID\\AutoSyncFiles\\": "Classes/"
@@ -36,7 +39,7 @@
     "extra": {
         "typo3/cms": {
             "extension-key": "auto_sync_files",
-            "version": "14.0.0",
+            "version": "14.0.1",
             "Package": {
                 "providesPackages": {}
             }
