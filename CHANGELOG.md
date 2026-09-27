@@ -5,6 +5,15 @@ All notable changes to this extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 The major version follows the newest supported TYPO3 version: **14.x = TYPO3 13.4 and 14.3**, 13.0.x = TYPO3 13.4, 12.0.x = TYPO3 12.4, 1.0.0 = TYPO3 8.7.
 
+## [14.0.2] - 2026-09-27
+
+Maintenance release; the behaviour is unchanged since 14.0.0.
+
+### Changed
+- Extension Scanner (Admin Tools > Upgrade): the eight "weak" matches are marked with `@extensionScannerIgnoreLine`. They were false positives: `SplFileInfo::getSize()` was taken for an icon API of the core, and `AbstractAdditionalFieldProvider::addMessage()` for the long removed `SchedulerModuleController::addMessage()`. On TYPO3 14.3 the scanner still reports the use of `AbstractAdditionalFieldProvider` and the `SC_OPTIONS` task registration; both are deprecated in TYPO3 14 and will be replaced before TYPO3 v15 ([#7]).
+- Extension category `be` (backend) instead of `plugin`, so the TER no longer lists the extension under "Frontend Plugins".
+- The descriptions in `composer.json` and `ext_emconf.php` are the same now.
+
 ## [14.0.1] - 2026-09-27
 
 Packaging release; the code is unchanged since 14.0.0.
@@ -145,6 +154,7 @@ TYPO3 12.4 support ([#3]) and the new Download & Extract task ([#2]).
 
 Initial release for TYPO3 8.7: a scheduler task that periodically downloads a file into the local web space (published in the TER). Includes the fix for tasks failing on some servers and the TYPO3 base-path helper in the task form.
 
+[14.0.2]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/14.0.2
 [14.0.1]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/14.0.1
 [14.0.0]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/14.0.0
 [13.0.1]: https://github.com/ingeniumdesign/auto_sync_files/releases/tag/13.0.1

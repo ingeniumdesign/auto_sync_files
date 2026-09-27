@@ -10,7 +10,7 @@
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Auto Sync Files',
     'description' => 'Downloads external files periodically via the TYPO3 Scheduler into your web space, so you always have the newest version stored locally (e.g. to improve caching). Optional Download & Extract mode: downloads a ZIP / TAR / TAR.GZ archive and merges it into, or replaces, the contents of a target folder.',
-    'category' => 'plugin',
+    'category' => 'be',
     'constraints' => [
         'depends' => [
             'typo3'     => '13.4.0-14.3.99',
@@ -30,5 +30,5 @@ $EM_CONF[$_EXTKEY] = [
     'author' => 'Sebastian Schmal',
     'author_email' => 'info@ingeniumdesign.de',
     'author_company' => 'INGENIUMDESIGN',
-    'version' => '14.0.1',
+    'version' => '14.0.2',
 ];
